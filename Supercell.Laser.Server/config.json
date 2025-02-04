@@ -1,0 +1,10 @@
+﻿{
+    "udp_host": "",
+    "udp_port": 0
+    "database_username": "",
+    "database_password": "",
+    "database_name": "",
+    "ContentUrl": "",
+    "update_sha": "",
+    "Fingerprint": ""
+}

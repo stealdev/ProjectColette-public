@@ -1,0 +1,20 @@
+{
+    "slots": [
+        {
+            "slot": 1,
+            "location": 0,
+            "game_modes": ["GemGrab" ]
+        },
+        {
+            "slot": 2,
+            "location": 0,
+            "game_modes": [ "Heist"]
+        },
+        {
+            "slot": 7,
+            "location": 0,
+            "game_modes": [ "BigGame" ]
+        }
+    ]
+}
+//1 2 3每日活动 4组队活动 6组队活动2 7特别活动 8单人活动 9星辉竞技场 14星光联赛 18随机应变 33社区活动
