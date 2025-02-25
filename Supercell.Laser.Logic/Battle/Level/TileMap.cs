@@ -619,7 +619,7 @@
                                         v30 = v64;
                                     if (v30 < v82)
                                         v30 = v82;
-                                    Debugger.Print(v29);
+                                    Debugger.Print(v29.ToString());
                                     if (v30 <= v29)
                                         return false;
                                 }
