@@ -1,14 +1,14 @@
 ## Linux
 
-#### this guide is made for ubuntu, when using different distros adjust the service and apt commands. [important notes for other distros](https://github.com/Erder00/royale-brawl-v29/blob/main/docs/Linux.md#other-distros)
+#### this guide is made for ubuntu, when using different distros adjust the service and apt commands.
 
 install both mysql and dotnet via your package manager
 ```bash
-sudo apt install mysql-server dotnet-sdk-8.0
+sudo apt install mysql-server dotnet-sdk-9.0
 ```
 clone the repository (install git via `sudo apt install git` if needed)
 ```bash
-git clone https://github.com/Erder00/royale-brawl-v29
+git clone https://github.com/allbrawl/ProjectCollete-public
 ```
 cd into the the correct directory
 ```bash
