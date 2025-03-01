@@ -12,7 +12,7 @@ git clone https://github.com/allbrawl/ProjectCollete-public
 ```
 cd into the the correct directory
 ```bash
-cd royale-brawl-v29/
+cd ProjectCollete-public/
 ```
 start mysql
 ```bash
