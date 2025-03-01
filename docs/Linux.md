@@ -8,11 +8,11 @@ sudo apt install mysql-server dotnet-sdk-9.0
 ```
 clone the repository (install git via `sudo apt install git` if needed)
 ```bash
-git clone https://github.com/allbrawl/ProjectCollete-public
+git clone https://github.com/allbrawl/ProjectColette-public
 ```
 cd into the the correct directory
 ```bash
-cd ProjectCollete-public/
+cd ProjectColette-public/
 ```
 start mysql
 ```bash
