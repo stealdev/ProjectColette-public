@@ -48,7 +48,7 @@ dotnet publish
 ```
 now cd into the path the the compiled dll
 ```bash
-cd bin/Release/net8.0/
+cd bin/Release/net9.0/
 ```
 edit the config file with your prefered text editor, for example vim:
 ```bash
