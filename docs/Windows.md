@@ -6,7 +6,7 @@ download mysql from [here](https://dev.mysql.com/downloads/installer/) (I sugges
 
 run the installer and select "full", then just go through the installer by always pressing execute or next
 
-download the  server from [here](https://github.com/allbrawl/ProjectCollete-public/archive/refs/heads/main.zip)
+download the  server from [here](https://github.com/allbrawl/ProjectColette-public/archive/refs/heads/main.zip)
 
 download and install dotnet from [the microsoft website](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
