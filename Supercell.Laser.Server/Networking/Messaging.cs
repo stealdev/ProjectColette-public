@@ -58,7 +58,7 @@ namespace Supercell.Laser.Server.Networking
 
         public void Send(GameMessage message)
         {
-            //Debugger.Print(message.GetType() + " sent!");
+            Debugger.Print(message.GetType() + " sent!");
             if (message.GetMessageType() == 20100)
             {
                 EncryptAndWrite(message);
@@ -149,7 +149,7 @@ namespace Supercell.Laser.Server.Networking
 
         private int ReadNewMessage(int type, int length, int version, byte[] payload)
         {
-            //if (type != 10504) Debugger.Print(type + " received!" + "(version " + version + ")");
+            if (type != 10504) Debugger.Print(type + " received!" + "(version " + version + ")");
             if (PepperState == 2 && type == 10101) DisableCrypto = true;
             if (!DisableCrypto)
                 switch (PepperState)
@@ -165,7 +165,7 @@ namespace Supercell.Laser.Server.Networking
                             Connection.Send(new AuthenticationFailedMessage()
                             {
                                 ErrorCode = 8,
-                                UpdateUrl = "https://www.bilibili.com/opus/777054674628902913"
+                                UpdateUrl = "https://github.com/allbrawl/ProjectColette-public"
                             });
                             return -1;
                         }
