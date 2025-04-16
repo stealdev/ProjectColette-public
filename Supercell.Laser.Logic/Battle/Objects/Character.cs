@@ -3,6 +3,7 @@
 namespace Supercell.Laser.Logic.Battle.Objects
 {
     using System;
+    using Supercell.Laser.Logic.Message.Home;
     using System.Collections.Generic;
     using System.Data.Common;
     using System.Diagnostics.CodeAnalysis;
@@ -29,6 +30,12 @@ namespace Supercell.Laser.Logic.Battle.Objects
     using Supercell.Laser.Titan.Debug;
     using Supercell.Laser.Titan.Math;
     using static System.Net.Mime.MediaTypeNames;
+    using Supercell.Laser.Logic.Message.Account;
+    using System;
+    using System.Diagnostics;
+    using System.Threading.Tasks;
+
+
     public class DamageNumber
     {
         public int Delay;
@@ -149,6 +156,8 @@ namespace Supercell.Laser.Logic.Battle.Objects
         public bool Attacking;
         public Character AutoAttackTarget;
 
+        public int AFKTicks;
+
         public int SkillHoldTicks;
         public int RapidFireTick;
         public List<Buff> m_buffs;
@@ -164,6 +173,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
         public List<Immunity> Immunitys;
 
         private int m_itemCount;
+        private int BattleRoyaleBuffs = 0;
 
         public AreaEffect RealmEffect;
         public CharacterData SummonedCharacter;
@@ -261,6 +271,8 @@ namespace Supercell.Laser.Logic.Battle.Objects
         public Gear Gear2;
         public CharacterData CharacterData;
 
+        public bool TaraGadget;
+
         public Character(CharacterData characterData) : base(characterData)
         {
             CharacterData = characterData;
@@ -289,6 +301,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
             SteerAngle = -1;
             SkillHoldTicks = -1;
             VisionOverrideX = -1;
+            AFKTicks = 0;
             if (WeaponSkillData != null)
             {
 
@@ -897,7 +910,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
                 case "BattleRoyaleBuff":
                     if (GameObjectManager.GetBattle().GetGameModeVariation() == 6)
                     {
-                        m_itemCount++;
+                        BattleRoyaleBuffs++;
                     }
                     int delta = ((int)(((float)10 / 100) * (float)CharacterData.Hitpoints));
                     m_maxHitpoints += delta;
@@ -919,6 +932,8 @@ namespace Supercell.Laser.Logic.Battle.Objects
                         player.AddScore(1);
                     }
                     break;
+                default: 
+                    return;
             }
         }
         public static int TransformPushBackStrengthToLength(int a1)
@@ -976,6 +991,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
         }
         public override void Tick()
         {
+            
             if (IsAlive())
             {
                 TickTimers();
@@ -996,14 +1012,53 @@ namespace Supercell.Laser.Logic.Battle.Objects
                     TickAutoUltiCharge();
                 }
                 TickTile();
-                if (TicksGone > INTRO_TICKS) TickAI();
-
+                if (TicksGone > INTRO_TICKS) TickAI(); AFKTicks++;
                 if (AreaEffect != null)
                 {
                     AreaEffect.SetPosition(GetX(), GetY(), 0);
                 }
             }
             else m_destructafterticks--;
+
+            if (AFKTicks > 380)
+            {
+                try
+                {
+                    if (this == null) return;
+                    var player = GameObjectManager.GetBattle().GetPlayer(GetGlobalID());
+                    if (player == null) return;
+                    if (player.IsBot() > 1) return;
+                    if (player.GameListener == null) return;
+                    DisconnectedMessage disconnectedMessage = new DisconnectedMessage();
+                    disconnectedMessage.Reason = 0x31;
+                    player.GameListener.SendTCPMessage(disconnectedMessage);
+                    ResetAFKTicks();
+                }
+                catch (Exception ex)
+                {
+                    Parallel.ForEach(GetBattle().m_players, player =>
+                    {
+                        if (player.GameListener != null)
+                        {
+                            ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
+                            try
+                            {
+                                player.GameListener.SendMessage(serverErrorMessage);
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine("Battle stopped with exception! Message: " + ex.Message + " Trace: " + ex.StackTrace);
+                            }
+                        }
+                    });
+
+                    GetBattle().m_updateTimer.Dispose();
+                    GetBattle().IsGameOver = true;
+
+                }
+
+
+            }
 
             //tms.SetPosition(Position.X, Position.Y, 0);
             //Debugger.Print(m_activeChargeType.ToString());
@@ -1012,6 +1067,11 @@ namespace Supercell.Laser.Logic.Battle.Objects
             //    if
             //}
 
+        }
+
+        public void ResetAFKTicks()
+        {
+            AFKTicks = 0;
         }
         public void SetImmunity(int TargetIndex, int Ticks, LogicData TargetData)
         {
@@ -1291,6 +1351,17 @@ namespace Supercell.Laser.Logic.Battle.Objects
             }
 
             ApplyBuff(5, a3, a2, 1);
+        }
+
+        public async void EyeActive()
+        {
+            if (YellowEye) return;
+           // var fade = GetFadeCounter();
+           // IncrementFadeCounter();
+            YellowEye = true;
+            await Task.Delay(8000);
+           // SetFadeCounter(fade);
+            YellowEye = false;
         }
         public void TickGears()
         {
@@ -1644,9 +1715,14 @@ namespace Supercell.Laser.Logic.Battle.Objects
         //    return result;
         //}
 
+        static int Value = 1000;
+
+
         private Character ShamanPetTarget;
         private void TickAI()
         {
+
+
             if (m_isBot != 0)
             {
                 TickBot();
@@ -1805,6 +1881,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
 
             if (TicksGone - m_lastAIAttackTick <= 20) return;
             Skill weapon = GetWeaponSkill();
+            Skill foto = GetUltimateSkill();
             LogicVector2 enemyPosition = m_closestEnemy.GetPosition();
             if (Position.GetDistance(enemyPosition) >= m_skills[0].SkillData.CastingRange * 80) return;
             if (m_isBot == 2) m_skills[0].Charge = 4000;
@@ -2782,6 +2859,99 @@ namespace Supercell.Laser.Logic.Battle.Objects
 
                 if (m_hitpoints <= 0)
                 {
+                    if (GameObjectManager.GetBattle().GetGameModeVariation() == 6 && this.CharacterData.Name == "TrainingDummySmall")
+                    {
+                        ItemData data1 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                        Item item1 = new Item(data1);
+                        item1.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                        item1.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                        GameObjectManager.AddGameObject(item1);
+                    }
+
+                    if (GameObjectManager.GetBattle().GetGameModeVariation() == 6 && CharacterData.IsHero())
+                    {
+                        switch (BattleRoyaleBuffs)
+                        {
+                            case <=2:
+                                    ItemData data11 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                    Item item11 = new Item(data11);
+                                    item11.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                    item11.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                    GameObjectManager.AddGameObject(item11);
+                                break;
+
+                            case 3:
+                                ItemData data21 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item21 = new Item(data21);
+                                item21.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item21.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item21);
+
+                                ItemData data2 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item2 = new Item(data2);
+                                item2.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item2.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item2);
+                                break;
+                            case 4:
+                                ItemData data41 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item41 = new Item(data41);
+                                item41.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item41.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item41);
+
+                                ItemData data42 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item42 = new Item(data42);
+                                item42.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item42.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item42);
+
+                                ItemData data43 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item43 = new Item(data41);
+                                item43.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item43.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item43);
+
+
+
+                                break;
+                            case >=5:
+
+                                ItemData data51 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item51 = new Item(data51);
+                                item51.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item51.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item51);
+
+                                ItemData data52 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item52 = new Item(data52);
+                                item52.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item52.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item52);
+
+                                ItemData data53 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item53 = new Item(data53);
+                                item53.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item53.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item53);
+
+                                ItemData data54 = DataTables.Get(18).GetData<ItemData>("BattleRoyaleBuff");
+                                Item item54 = new Item(data54);
+                                item54.SetPosition(GetX() + GameObjectManager.GetBattle().GetRandomInt(0, 450), GetY() + GameObjectManager.GetBattle().GetRandomInt(0, 450), 0);
+                                item54.SetAngle(GameObjectManager.GetBattle().GetRandomInt(0, 360));
+                                GameObjectManager.AddGameObject(item54);
+
+
+                                break;
+                            default:
+                                ;
+
+                        }
+
+                    }
+
+
+
                     Projectile v113 = GetControlledProjectile();
                     if (v113 != null) v113.TargetReached(5);
 
@@ -2864,6 +3034,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
                             GameObjectManager.AddGameObject(item);
                         }
                     }
+
 
                 }
             }
@@ -10070,7 +10241,7 @@ namespace Supercell.Laser.Logic.Battle.Objects
             if (CharacterData.IsHero() || CharacterData.IsMirrage())
             {
                 bitStream.WritePositiveVIntMax255OftenZero(m_itemCount);
-                bitStream.WritePositiveVIntMax255OftenZero(0);//v53
+                bitStream.WritePositiveVIntMax255OftenZero(BattleRoyaleBuffs);//v53
                 if (bitStream.WriteBoolean(ConsumableShield > 0))
                 {
                     bitStream.WritePositiveIntMax8191(ConsumableShield);

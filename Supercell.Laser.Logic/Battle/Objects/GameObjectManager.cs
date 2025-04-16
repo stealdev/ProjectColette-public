@@ -3,12 +3,14 @@
     using System.Reflection.Metadata.Ecma335;
     using System.Runtime.CompilerServices;
     using Supercell.Laser.Logic.Battle.Level;
+    using Supercell.Laser.Logic.Message.Home;
     using Supercell.Laser.Logic.Battle.Structures;
     using Supercell.Laser.Logic.Data.Helper;
     using Supercell.Laser.Logic.Helper;
     using Supercell.Laser.Logic.Util;
     using Supercell.Laser.Titan.DataStream;
     using Supercell.Laser.Titan.Debug;
+    using System.Numerics;
 
     public class GameObjectManager//+32 type 64 encode 48IsAlive
     {
@@ -208,7 +210,76 @@
                 }
                 foreach (GameObject obj in AddObjects)
                 {
-                    if (obj.IsInRealm ^ IsInRealm) continue;
+                    /*try
+                    {
+                        if (obj == null)
+                        {
+                            Parallel.ForEach(GetBattle().m_players, player =>
+                            {
+                                if (player.GameListener != null)
+                                {
+                                    ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
+                                    try
+                                    {
+                                        player.GameListener.SendMessage(serverErrorMessage);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        Console.WriteLine("Battle stopped");
+                                    }
+                                }
+                            });
+
+                            GetBattle().m_updateTimer.Dispose();
+                            GetBattle().IsGameOver = true;
+                        }
+                        if (obj == null)
+                        {
+                            if (obj == null)
+                            {
+                                Parallel.ForEach(GetBattle().m_players, player =>
+                                {
+                                    if (player.GameListener != null)
+                                    {
+                                        ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
+                                        try
+                                        {
+                                            player.GameListener.SendMessage(serverErrorMessage);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            Console.WriteLine("Battle stopped because obj is NULL!");
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    */
+                        if (obj.IsInRealm ^ IsInRealm) continue;
+                    /*}
+                    catch (Exception ex)
+                    {
+                        Parallel.ForEach(GetBattle().m_players, player =>
+                        {
+                            if (player.GameListener != null)
+                            {
+                                ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
+                                try
+                                {
+                                    player.GameListener.SendMessage(serverErrorMessage);
+                                }
+                                catch (Exception)
+                                {
+                                    Console.WriteLine("Battle stopped with exception! Message: " + ex.Message + " Trace: " + ex.StackTrace);
+                                }
+                            }
+                        });
+
+                        GetBattle().m_updateTimer.Dispose();
+                        GetBattle().IsGameOver = true;
+
+                    }
+                    */
                     if (obj.GetFadeCounter() > 0 || obj.GetIndex() / 16 == teamIndex)
                     {
                         objects.Add(obj);
@@ -249,8 +320,8 @@
                 bitStream.WritePositiveVInt(Battle.GetGemGrabCountdown(), 4);
             }
 
-            bitStream.WriteBoolean(false);//没用
-            bitStream.WriteInt(-1, 4);//对局状态
+            bitStream.WriteBoolean(false);
+            bitStream.WriteIntMax15(-1);
 
             bitStream.WriteBoolean(false);
             bitStream.WriteBoolean(false);
@@ -334,8 +405,9 @@
                 {
                     ;
                 }
+                
                 bitStream.WriteBoolean(false);
-                if (GameModeVariation == 6) bitStream.WriteBoolean(false);
+                if (GameModeVariation == 6) bitStream.WritePositiveInt(0, 4);
                 if (GameModeVariation == 3) bitStream.WriteBoolean(false);
                 bitStream.WritePositiveVIntMax255OftenZero(0);
                 bitStream.WriteBoolean(false);
@@ -361,7 +433,14 @@
             switch (GameModeVariation)
             {
                 case 6:
-                    bitStream.WritePositiveInt(Battle.GetPlayersAliveCountForBattleRoyale(), 4);
+                    bitStream.WritePositiveIntMax15(Battle.GetPlayersAliveCountForBattleRoyale());
+                    break;
+                case 9:
+                    bitStream.WritePositiveIntMax7(1);
+                    break;
+                case 16:
+                    bitStream.WritePositiveIntMax8191(0);
+                    bitStream.WritePositiveIntMax8191(0);
                     break;
             }
             if (GameModeUtil.HasTwoBases(GameModeVariation))
@@ -378,18 +457,19 @@
                 bitStream.WritePositiveIntMax127(hp1);
                 bitStream.WritePositiveIntMax127(hp2);
             }
-            if (GameModeVariation == 13) bitStream.WritePositiveIntMax131071(131071);
+            if (GameModeVariation == 13) bitStream.WritePositiveIntMax131071(0); // Damage Per Second
             if (GameModeVariation == 7) bitStream.WritePositiveIntMax127(127);
             for (int i = 0; i < players.Length; i++)
             {
                 //bitStream.WriteBoolean(false); 
                 //bitStream.WriteBoolean(false);
                 //if(GetBattle().GetTicksGone()%100==0) players[i].KilledPlayer(0, 0);
-                if (GameModeVariation != 6)
+                if (GameModeVariation != 6 && GameModeVariation != 15)
                 {
                     bitStream.WriteBoolean(true);
                     bitStream.WritePositiveVIntMax255(players[i].GetScore());
                 }
+                else if (GameModeVariation == 15) bitStream.WritePositiveIntMax134217727(1);
                 else
                 {
                     bitStream.WriteBoolean(false);

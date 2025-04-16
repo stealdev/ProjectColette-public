@@ -1,5 +1,6 @@
 ﻿namespace Supercell.Laser.Logic.Util
 {
+    using System.Reflection.Metadata.Ecma335;
     using Supercell.Laser.Logic.Battle;
     using Supercell.Laser.Titan.Debug;
 
@@ -77,7 +78,7 @@
 
         public static bool HasTwoTeams(int variation)
         {
-            return variation != 6;
+            return variation != 6 || variation != 15 || variation != 9;
         }
 
         public static bool HasTwoBases(int variation)
@@ -119,8 +120,18 @@
                     return 12;
                 case "Training":
                     return 13;
+                case "LoneStar":
+                    return 15;
+                case "CTF":
+                    return 16;
                 case "TagTeam":
                     return 24;
+                case "Invasion":
+                    return 27;
+                case "DeathmatchFFA":
+                    return 28;
+                case "LastStand":
+                    return 29;
                 case "ReachExit":
                     return 30;
                 case "MapPrint":

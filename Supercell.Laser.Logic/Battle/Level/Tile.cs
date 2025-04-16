@@ -43,9 +43,11 @@
                 TileData tileData = data as TileData;
                 if (tileData != null)
                 {
+                    
                     if (tileData.TileCode[0] == code)
                     {
                         Data = tileData;
+                       // if (tileData.TileCode == "B" && tileData != null && this != null) Destruct();
                         break;
                     }
                 }

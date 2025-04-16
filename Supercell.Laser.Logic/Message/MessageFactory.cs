@@ -75,6 +75,7 @@
                 {14354, typeof(TeamChangeMemberSettingsMessage)},
                 {14355, typeof(TeamSetMemberReadyMessage)},
                 {14357, typeof(TeamToggleMemberSideMessage)},
+                {14358, typeof(TeamSpectateMessage)},
                 {14049, typeof(TeamChatMessage)},
                 {14361, typeof(TeamMemberStatusMessage)},
                 {14362, typeof(TeamSetEventMessage)},

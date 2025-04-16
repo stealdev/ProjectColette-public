@@ -5,6 +5,7 @@
     public class PlayerDisplayData
     {
         public int ThumbnailId;
+        public int NameColorId;
         public string Name;
 
         public PlayerDisplayData()
@@ -12,9 +13,10 @@
             ;
         }
 
-        public PlayerDisplayData(int thumbnail, string name)
+        public PlayerDisplayData(int thumbnail, int namecolor, string name)
         {
             ThumbnailId = thumbnail;
+            NameColorId = namecolor;
             Name = name;
         }
 
@@ -23,7 +25,7 @@
             stream.WriteString(Name);
             stream.WriteVInt(5000);
             stream.WriteVInt(ThumbnailId);
-            stream.WriteVInt(43000000);
+            stream.WriteVInt(NameColorId);
             stream.WriteVInt(-1);
 
         }

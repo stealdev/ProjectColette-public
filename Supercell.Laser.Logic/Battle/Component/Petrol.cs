@@ -72,7 +72,7 @@ namespace Supercell.Laser.Logic.Battle.Structures
             if (!Ignited)
             {
                 Tile v10 = a2.GetBattle().GetTileMap().GetTile(X, Y, true);
-                if (v10 != null && v10.Data.HidesHero) v10.Destruct();
+                if (v10 != null && v10.Data.HidesHero || v10.Data.TileCode == "B") v10.Destruct();
                 AreaEffectData v11 = DataTables.GetAreaEffectByName("PetrolFire");
                 string aed = GamePlayUtil.GetCharacterFromPlayerIndex(PlayerIndex, a2)?.GetPlayer()?.SkinConfData?.AreaEffectUlti;
                 if (aed != null) v11 = DataTables.GetAreaEffectByName(aed);

@@ -9,6 +9,11 @@ namespace Supercell.Laser.Logic.Data
 
         public string Name { get; set; }
 
+        public int PriceGems { get; set; }
+
+        public int PriceBling { get; set; }
+        public string CatalogPreRequirementSkin { get; set; }
+
         //public int RequiredExpLevel { get; set; }
 
         //public int RequiredTotalTrophies { get; set; }

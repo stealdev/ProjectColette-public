@@ -6,6 +6,7 @@
     using System;
     using System.Linq;
     using System.Text;
+    using System.Numerics;
 
     public class ByteStream : ChecksumEncoder
     {
@@ -282,6 +283,15 @@
         {
             WriteShort(value);
         }
+
+        public void WriteLongLong128(BigInteger value)
+        {
+            this.WriteIntToByteArray((uint)(value & uint.MaxValue));
+            this.WriteIntToByteArray((uint)((value >> 32) & uint.MaxValue));
+            this.WriteIntToByteArray((uint)((value >> 64) & uint.MaxValue));
+            this.WriteIntToByteArray((uint)((value >> 96) & uint.MaxValue));
+        }
+
         public void WriteCompressedString(string value)
         {
             var data = Encoding.UTF8.GetBytes(value);
@@ -345,6 +355,11 @@
             WriteVInt(v2);
         }
 
+        public void WriteVIntLong(int a1, int a2)
+        {
+            WriteVInt(a1);
+            WriteVInt(a2);
+        }
         public override void WriteVInt(int value)
         {
             this.EnsureCapacity(5);
@@ -437,6 +452,17 @@
         }
 
         public void WriteIntToByteArray(int value)
+        {
+            this.EnsureCapacity(4);
+            this.BitOffset = 0;
+
+            this.Buffer[this.Offset++] = (byte)(value >> 24);
+            this.Buffer[this.Offset++] = (byte)(value >> 16);
+            this.Buffer[this.Offset++] = (byte)(value >> 8);
+            this.Buffer[this.Offset++] = (byte)value;
+        }
+        
+        public void WriteIntToByteArray(uint value)
         {
             this.EnsureCapacity(4);
             this.BitOffset = 0;

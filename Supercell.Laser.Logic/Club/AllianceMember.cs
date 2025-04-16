@@ -39,7 +39,7 @@
 
         public AllianceMember(ClientAvatar avatar)
         {
-            DisplayData = new PlayerDisplayData(avatar.HomeMode.Home.ThumbnailId, avatar.Name);
+            DisplayData = new PlayerDisplayData(avatar.HomeMode.Home.ThumbnailId, avatar.HomeMode.Home.NameColorId, avatar.Name);
             AccountId = avatar.AccountId;
             Trophies = avatar.Trophies;
             Role = avatar.AllianceRole;

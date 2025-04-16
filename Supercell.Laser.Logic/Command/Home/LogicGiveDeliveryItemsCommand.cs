@@ -9,6 +9,7 @@
         public readonly List<DeliveryUnit> DeliveryUnits;
         public int RewardTrackType { get; set; }
         public int RewardForRank { get; set; }
+        public int BrawlPassSeason { get; set; }
 
         public LogicGiveDeliveryItemsCommand() : base()
         {
@@ -17,7 +18,7 @@
 
         public override void Encode(ByteStream stream)
         {
-            stream.WriteVInt(0);
+            stream.WriteVInt(1);
 
             stream.WriteVInt(DeliveryUnits.Count);
             foreach (DeliveryUnit unit in DeliveryUnits)
@@ -26,12 +27,20 @@
             }
 
             stream.WriteBoolean(false);
-
             stream.WriteVInt(RewardTrackType);
             stream.WriteVInt(RewardForRank);
+            stream.WriteVInt(BrawlPassSeason);
             stream.WriteVInt(0);
 
-            stream.WriteVInt(1);
+            stream.WriteBoolean(false);
+            stream.WriteBoolean(false);
+
+            stream.WriteVInt(0);
+            stream.WriteVInt(0);
+
+            stream.WriteVInt(0);
+            stream.WriteVInt(0);
+            
             base.Encode(stream);
         }
 

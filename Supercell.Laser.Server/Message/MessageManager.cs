@@ -84,12 +84,13 @@
         {
             if (message.GetMessageType() != 10100)
             {
-                //LobbyInfoMessage lim = new LobbyInfoMessage();
-                //lim.playercount = Sessions.Count;
-                //Connection.Send(lim);
+                LobbyInfoMessage lim = new LobbyInfoMessage();
+                lim.playercount = Sessions.Count;
+                Connection.Send(lim);
             }
             switch (message.GetMessageType())
             {
+
                 case 10100:
                     ClientHelloReceived((ClientHelloMessage)message);
                     break;
@@ -214,6 +215,9 @@
                 case 14357:
                     TeamToggleMemberSideReceived((TeamToggleMemberSideMessage)message);
                     break;
+                case 14358:
+                    TeamSpectateMessageReceived((TeamSpectateMessage)message);
+                    break;
                 case 14049:
                     TeamChatReceived((TeamChatMessage)message);
                     break;
@@ -250,11 +254,33 @@
                 case 14881:
                     TeamRequestJoinReceived((TeamRequestJoinMessage)message);
                     break;
+                    
 
                 default:
-                    Logger.Print($"MessageManager::ReceiveMessage - no case for {message.GetType().Name} ({message.GetMessageType()})");
+                    Logger.Print($"[MessageManager::ReceiveMessage] Message received! PacketName: {message.GetType().Name}, PacketID: {message.GetMessageType()}");
                     break;
             }
+        }
+
+        private void TeamSpectateMessageReceived(TeamSpectateMessage message)
+        {
+            TeamEntry team = Teams.Get(message.TeamId);
+            if (team == null) return;
+            HomeMode.Avatar.TeamId = team.Id;
+            TeamMember member = new TeamMember();
+            member.AccountId = HomeMode.Avatar.AccountId;
+            member.CharacterId = HomeMode.Home.CharacterId;
+            member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
+
+            Hero hero = HomeMode.Avatar.GetHero(HomeMode.Home.CharacterId);
+            member.HeroLevel = hero.PowerLevel;
+            member.HeroTrophies = hero.Trophies;
+            member.HeroHighestTrophies = hero.HighestTrophies;
+
+            member.IsOwner = false;
+            member.State = 2;
+            team.Members.Add(member);
+            team.TeamUpdated();
         }
 
         private void TeamPremadeChatReceived(TeamPremadeChatMessage message)
@@ -364,7 +390,7 @@
             TeamMember member = new TeamMember();
             member.AccountId = HomeMode.Avatar.AccountId;
             member.CharacterId = HomeMode.Home.CharacterId;
-            member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+            member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
             member.homeMode = HomeMode;
             Hero hero = HomeMode.Avatar.GetHero(HomeMode.Home.CharacterId);
             member.HeroTrophies = hero.Trophies;
@@ -719,7 +745,7 @@
                 TeamMember member = new TeamMember();
                 member.AccountId = HomeMode.Avatar.AccountId;
                 member.CharacterId = HomeMode.Home.CharacterId;
-                member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+                member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
                 member.homeMode = HomeMode;
                 Hero hero = HomeMode.Avatar.GetHero(HomeMode.Home.CharacterId);
                 member.HeroTrophies = hero.Trophies;
@@ -766,7 +792,7 @@
 
                 Friend friendEntry = new Friend();
                 friendEntry.AccountId = HomeMode.Avatar.AccountId;
-                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
                 friendEntry.Trophies = HomeMode.Avatar.Trophies;
                 teamInvitationMessage.Unknown = 1;
                 teamInvitationMessage.FriendEntry = friendEntry;
@@ -829,7 +855,7 @@
             TeamMember member = new TeamMember();
             member.AccountId = HomeMode.Avatar.AccountId;
             member.CharacterId = HomeMode.Home.CharacterId;
-            member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+            member.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
             member.homeMode = HomeMode;
             Hero hero = HomeMode.Avatar.GetHero(HomeMode.Home.CharacterId);
             member.HeroTrophies = hero.Trophies;
@@ -953,14 +979,14 @@
             {
                 Friend friendEntry = new Friend();
                 friendEntry.AccountId = HomeMode.Avatar.AccountId;
-                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
                 friendEntry.FriendReason = message.Reason;
                 friendEntry.FriendState = 3;
                 avatar.Friends.Add(friendEntry);
 
                 Friend request = new Friend();
                 request.AccountId = avatar.AccountId;
-                request.DisplayData = new PlayerDisplayData(data.Home.ThumbnailId, data.Avatar.Name);
+                request.DisplayData = new PlayerDisplayData(data.Home.ThumbnailId, data.Home.NameColorId, data.Avatar.Name);
                 request.FriendReason = 0;
                 request.FriendState = 2;
                 HomeMode.Avatar.Friends.Add(request);
@@ -1359,9 +1385,9 @@
             player.SkinIds[0] = message.SkinId;
             player.CharacterDatas[0] = (DataTables.Get(DataType.Character).GetDataWithId<CharacterData>(message.CharacterId));
             player.HeroIndexMax = 0;
-            player.Gear1 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000000 + Connection.Avatar.GetHero(message.CharacterId).SelectedGearId1);
-            player.Gear2 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000000 + Connection.Avatar.GetHero(message.CharacterId).SelectedGearId2);
-            player.Accessory = player.AccessoryData == null ? null : new Accessory(player.AccessoryData);
+            player.Gear1 = null;
+            player.Gear2 = null;
+            player.Accessory = null;
             Hero hero = Connection.Avatar.GetHero(message.CharacterId);
             player.Trophies = hero.Trophies;
             player.HighestTrophies = hero.HighestTrophies;
@@ -1450,7 +1476,7 @@
         }
         private void LoginReceived(AuthenticationMessage message)
         {
-            if (message.ClientMajor < 53)
+            if (message.ClientMajor < 52)
             {
                 Connection.Send(new AuthenticationFailedMessage()
                 {
@@ -1468,16 +1494,7 @@
                 });
                 return;
             }
-            if (Configuration.Instance.UpdateSha != "" && message.ResourceSha != Configuration.Instance.UpdateSha)
-            {
-                Connection.Send(new AuthenticationFailedMessage()
-                {
-                    ErrorCode = 7,
-                    FingerprintSha = Configuration.Instance.Fingerprint,
-                    ContentUrl = Configuration.Instance.ContentUrl
-                });
-                return;
-            }
+
             Account account = null;
             if (message.AccountId == 0)
             {
@@ -1492,14 +1509,14 @@
             if (account == null)
             {
                 AuthenticationFailedMessage loginFailed = new AuthenticationFailedMessage();
-                loginFailed.ErrorCode = 1;
-                loginFailed.Message = "未找到账号。";
+                loginFailed.ErrorCode = 22;
+                loginFailed.Message = "Account not loaded.";
                 Connection.Send(loginFailed);
                 return;
             }
             account.Avatar.Refresh();
 
-            Debugger.Print(account.Avatar.Name + "(" + account.AccountId + ")已登录。");
+            Debugger.Print(account.Avatar.Name + "(" + account.AccountId + ") login.");
 
             if (account.Avatar.Banned)
             {
@@ -1525,6 +1542,7 @@
             if (HomeMode.Avatar.BattleId > 0)
             {
                 battle = Battles.Get(HomeMode.Avatar.BattleId);
+                Console.WriteLine(battle);
             }
 
             if (battle == null)
@@ -1563,7 +1581,7 @@
 
                 Friend friendEntry = new Friend();
                 friendEntry.AccountId = new LogicLong(-1, -1);
-                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Avatar.Name);
+                friendEntry.DisplayData = new PlayerDisplayData(HomeMode.Home.ThumbnailId, HomeMode.Home.NameColorId, HomeMode.Avatar.Name);
                 friendEntry.Trophies = HomeMode.Avatar.Trophies;
                 teamInvitationMessage.Unknown = 1;
                 teamInvitationMessage.FriendEntry = friendEntry;

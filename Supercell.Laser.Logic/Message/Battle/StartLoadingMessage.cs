@@ -17,6 +17,8 @@
         public BattlePlayerMap map;
         public int MapMode;
         public List<int> Modifiers;
+        public bool LeaveButton;
+
         public StartLoadingMessage() : base()
         {
             Players = new List<BattlePlayer>();
@@ -31,6 +33,7 @@
                 this.map = map;
                 LocationId = 0;
                 GameMode = map.GMV;
+                LeaveButton = false;
             }
         }
         public override void Encode()
@@ -73,7 +76,7 @@
             Stream.WriteVInt(0);
             Stream.WriteVInt(0);
 
-            Stream.WriteBoolean(true);//show quit
+            Stream.WriteBoolean(LeaveButton);//show quit
 
         }
 

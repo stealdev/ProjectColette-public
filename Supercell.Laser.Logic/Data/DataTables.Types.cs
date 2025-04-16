@@ -22,11 +22,17 @@ namespace Supercell.Laser.Logic.Data
         PlayerThumbnail = 28,
         Skin = 29,
         Milestone = 39,
+        NameColor = 43,
 
         SkinConf = 44,
         Accessory = 50,
         Emote = 52,
-        Gear = 62
+        Gear = 62,
+        Titul = 76,
+
+        Mastery = 75,
+        MasteryVanity = 74,
+        Spray = 68,
     }
 
     public partial class DataTables
@@ -53,6 +59,10 @@ namespace Supercell.Laser.Logic.Data
             DataTypes.Add(DataType.Accessory, typeof(AccessoryData));
             DataTypes.Add(DataType.Emote, typeof(EmoteData));
             DataTypes.Add(DataType.Gear, typeof(GearData));
+            DataTypes.Add(DataType.Titul, typeof(TitlesData));
+            DataTypes.Add(DataType.Mastery, typeof(MasteryData));
+            DataTypes.Add(DataType.MasteryVanity, typeof(MasteryVanityData));
+            DataTypes.Add(DataType.Spray, typeof(SprayData));
 
             Types = DataTypes.ToDictionary(x => x.Value, x => x.Key);
         }

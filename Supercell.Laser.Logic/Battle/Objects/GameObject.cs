@@ -108,6 +108,10 @@
             if (FadeCounter > 0) FadeCounter--;
         }
 
+        public void SetFadeCounter(int counter)
+        { FadeCounter = counter; }
+
+
         public int GetFadeCounter()
         {
             return FadeCounter;

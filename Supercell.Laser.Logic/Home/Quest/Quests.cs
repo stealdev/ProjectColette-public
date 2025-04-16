@@ -145,7 +145,7 @@
             encoder.WriteVInt(QuestList.Count);
             foreach (Quest quest in QuestList.ToArray())
             {
-                quest.Encode(encoder);
+                quest.EncodeHome(encoder);
             }
         }
     }

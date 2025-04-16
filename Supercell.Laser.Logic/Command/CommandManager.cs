@@ -23,6 +23,7 @@
                 {521, typeof(LogicPurchaseHeroLvlUpMaterialCommand)},
                 {522,typeof(LogicHeroSeenCommand) },
                 {525, typeof(LogicSelectCharacterCommand)},
+                {527, typeof(LogicSetPlayerNameColorCommand)},
                 {529, typeof(LogicSelectStarPowerCommand)},
                 {533, typeof(LogicQuestsSeenCommand)},
                 {534, typeof(LogicPurchaseBrawlPassCommand)},
@@ -30,8 +31,10 @@
                 {536, typeof(LogicPurchaseBrawlPassProgressCommand)},
                 {538, typeof(LogicSelectEmoteCommand)},
                 {543, typeof(LogicSelectGearCommand)},
+                {562, typeof(LogicStarRoadRewardCommand) },
                 {567, typeof(LogicEditBattlePassCommand1)},
                 {568, typeof(LogicEditBattlePassCommand)},
+                {569, typeof(LogicClaimMasteriesCommand)},
                 {570, typeof(LogicSelectFavouriteBrawlerCommand)}
             };
         }
@@ -42,10 +45,10 @@
             Command command = CommandManager.CreateCommand(type);
             if (command == null)
             {
-                if (type != 206 && type != 514 && type != 567) Debugger.Warning("Command is unhandled: " + type);
+                Debugger.Warning("Command is unhandled: " + type);
                 return null;
             }
-            //Debugger.Print(type.ToString());
+
             command.Decode(stream);
             return command;
         }

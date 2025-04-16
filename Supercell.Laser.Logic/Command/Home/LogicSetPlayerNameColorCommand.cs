@@ -1,28 +1,28 @@
-﻿namespace Supercell.Laser.Logic.Command.Home
+namespace Supercell.Laser.Logic.Command.Home
 {
     using Supercell.Laser.Logic.Data;
     using Supercell.Laser.Logic.Data.Helper;
     using Supercell.Laser.Logic.Home;
     using Supercell.Laser.Titan.DataStream;
 
-    public class LogicSetPlayerThumbnailCommand : Command
+    public class LogicSetPlayerNameColorCommand : Command
     {
-        public int ThumbnailInstanceId;
+        public int NameColorInstanceId;
 
         public override void Decode(ByteStream stream)
         {
             base.Decode(stream);
             stream.ReadVInt();
-            ThumbnailInstanceId = stream.ReadVInt();
+            NameColorInstanceId = stream.ReadVInt();
         }
 
         public override int Execute(HomeMode homeMode)
         {
-            if (ThumbnailInstanceId < 0) return 1;
-            if (ThumbnailInstanceId > DataTables.Get(DataType.PlayerThumbnail).Count) return 2;
+            if (NameColorInstanceId < 0) return 1;
+            if (NameColorInstanceId > DataTables.Get(DataType.NameColor).Count) return 2;
 
-            homeMode.Home.ThumbnailId = GlobalId.CreateGlobalId(28, ThumbnailInstanceId);
-
+            homeMode.Home.NameColorId = GlobalId.CreateGlobalId(43, NameColorInstanceId);
+            Console.WriteLine(homeMode.Home.NameColorId);
             if (homeMode.Avatar.Friends.Count > 0)
             {
                 foreach (var friend in homeMode.Avatar.Friends)
@@ -36,7 +36,7 @@
 
         public override int GetCommandType()
         {
-            return 505;
+            return 527;
         }
     }
 }

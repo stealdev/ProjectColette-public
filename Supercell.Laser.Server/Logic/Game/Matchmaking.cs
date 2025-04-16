@@ -103,7 +103,7 @@
         public int SecondsLeft;
         private int Turns;
 
-        public const int SEARCH_TIMEOUT = 3600;
+        public const int SEARCH_TIMEOUT = 15;
 
         public MatchmakingSlot(EventData eventData, int playersRequired)
         {
@@ -345,7 +345,7 @@
                         team2BotsCharacters.Add(botCharacter);
                     }
                     CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
-                    BattlePlayer bot = BattlePlayer.CreateBotInfo("机器人" + (i - sortedEntries.Count + 1).ToString() + "号", i, teamIndex, botCharacter);
+                    BattlePlayer bot = BattlePlayer.CreateBotInfo((i - sortedEntries.Count + 1).ToString(), i, teamIndex, botCharacter);
                     battle.AddPlayer(bot, -1);
                 }
             }
@@ -394,6 +394,7 @@
                 startLoading.Players.AddRange(battle.GetPlayers());
                 sortedEntries[i].Connection.Send(startLoading);
                 battle.Dummy = startLoading;
+                battle.BattleWithTrophies = true;
             }
             //if (entries.Count > 1)
             //{

@@ -55,7 +55,7 @@
                     Stream.WriteString(avatar.Name ?? "NoName");
                     Stream.WriteVInt(100);
                     Stream.WriteVInt(home.ThumbnailId);
-                    Stream.WriteVInt(43000000);
+                    Stream.WriteVInt(home.NameColorId);
                     Stream.WriteVInt(0);
                     Stream.WriteBoolean(false);
                 }

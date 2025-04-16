@@ -16,7 +16,9 @@
     using System.Numerics;
     using Newtonsoft.Json.Bson;
     using System.Security.Cryptography;
+    using System.Timers;
     using Supercell.Laser.Logic.Battle.Objects;
+    using System.Xml.Linq;
 
     public class BattlePlayer
     {
@@ -25,6 +27,8 @@
         public int TeamIndex;
 
         public long TeamId = -1;
+
+        public Dictionary<int, int> Emotes = new Dictionary<int, int>();
 
         public int HeroIndex;
         public int HeroIndexMax;
@@ -88,6 +92,10 @@
         public int Kills;
         public int Damage;
         public int Heals;
+        public int Deaths;
+
+        public int DamagePerSec;
+        private readonly Timer _timer = new(5000) { AutoReset = false };
 
         public int DeathTick;
 
@@ -118,6 +126,7 @@
         {
             Heals += heals;
         }
+
 
         public void DamageDealed(int damage)
         {
@@ -265,6 +274,7 @@
             }
             return null;
         }
+
         public void UsePin(int index, int ticks)
         {
             StartUsingPinTicks = ticks;
@@ -298,7 +308,7 @@
         }
         public bool HasOverCharge()
         {
-            return OverChargeData != null;
+            return false;
         }
         public void Encode(ByteStream stream)
         {
@@ -317,37 +327,32 @@
                     //logic Hero Upgrades
                     stream.WriteVInt(HeroPowerLevel);
                     ByteStreamHelper.WriteDataReference(stream, StarPowerDatas[i]);
-                    ByteStreamHelper.WriteDataReference(stream, AccessoryCardDatas[i]);
+                    stream.WriteVInt(0);
                     //ByteStreamHelper.WriteDataReference(stream, null);
 
-                    ByteStreamHelper.WriteDataReference(stream, Gear1);
-                    ByteStreamHelper.WriteDataReference(stream, Gear2);
+                    stream.WriteVInt(0);
+                    stream.WriteVInt(0);
                     //stream.WriteVInt(3);
                     //stream.WriteVInt(3);
-                    ByteStreamHelper.WriteDataReference(stream, OverChargeDatas[i]); //OverCharge
+                    stream.WriteVInt(0);
 
                 }
                 if (stream.WriteBoolean(true))
                 {
                     stream.WriteVInt(5);
-                    ByteStreamHelper.WriteDataReference(stream, GetDefaultEmoteForCharacter(DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterIds[i]).Name, "HAPPY"));
-                    ByteStreamHelper.WriteDataReference(stream, GetDefaultEmoteForCharacter(DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterIds[i]).Name, "SAD"));
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, 175));
-                    ByteStreamHelper.WriteDataReference(stream, GetDefaultEmoteForCharacter(DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterIds[i]).Name, "THANKS"));
-                    ByteStreamHelper.WriteDataReference(stream, GetDefaultEmoteForCharacter(DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterIds[i]).Name, "GG"));
-                    //ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, 175));
-                    stream.WriteVInt(5);
+
+                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, Emotes.TryGetValue(1, out var value) ? value : 137 - 3));
+                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, Emotes.TryGetValue(2, out var value2) ? value2 : 137 - 3));
+                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, Emotes.TryGetValue(3, out var value3) ? value3 : 137 - 3));
+
+                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, Emotes.TryGetValue(4, out var value4) ? value4 : 137 - 3));
+                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(52, Emotes.TryGetValue(5, out var value5) ? value5 : 137 - 3));
 
 
                 }
                 if (stream.WriteBoolean(true))
                 {
-                    stream.WriteVInt(5);
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(68, 0));
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(68, 1));
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(68, 2));
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(68, 3));
-                    ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(68, 4));
+                    stream.WriteVInt(0);
 
                 }
                 string tmp = DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterIds[i]).Name;
@@ -372,7 +377,7 @@
             ByteStreamHelper.WriteDataReference(stream, T1);
             ByteStreamHelper.WriteDataReference(stream, T2);
             ByteStreamHelper.WriteDataReference(stream, E);
-            ByteStreamHelper.WriteDataReference(stream, GlobalId.CreateGlobalId(76, RandomNumberGenerator.GetInt32(0, 66)));//76
+            ByteStreamHelper.WriteDataReference(stream, Ti);
             stream.WriteVInt(0);
         }
 
@@ -389,13 +394,17 @@
             player.CharacterDatas = new CharacterData[3];
             player.OverChargeDatas = new CardData[3];
 
+            Hero geroin = null;
+
             player.DisplayData.ThumbnailId = home.ThumbnailId;
+            player.DisplayData.NameColorId = home.NameColorId;
             player.AccountId = avatar.AccountId;
             for (int i = 0; i < home.CharacterIds.Length; i++)
             {
+
                 player.CharacterIds[i] = (home.CharacterIds[i]);
                 player.AccessoryCardDatas[i] = (avatar.GetHero(home.CharacterIds[i]).SelectedGadgetId == 0 ? null : DataTables.Get(23).GetData<CardData>(avatar.GetHero(home.CharacterIds[i]).SelectedGadgetId));
-                player.AccessoryDatas[i] = (player.AccessoryCardDatas[i] == null ? null : DataTables.Get(DataType.Accessory).GetData<AccessoryData>(player.AccessoryCardDatas[i].Name));
+                player.AccessoryDatas[i] = null;
 
                 player.StarPowerDatas[i] = (DataTables.Get(23).GetData<CardData>(avatar.GetHero(home.CharacterIds[i]).SelectedStarPowerId));
 
@@ -403,13 +412,21 @@
 
                 player.CharacterDatas[i] = (DataTables.Get(DataType.Character).GetDataWithId<CharacterData>(home.CharacterIds[i]));
                 int OverChargeId = avatar.GetHero(home.CharacterIds[i]).SelectedOverChargeId;
-                if (OverChargeId > 0) player.OverChargeDatas[i] = DataTables.Get(23).GetData<CardData>(avatar.GetHero(home.CharacterIds[i]).SelectedOverChargeId);
-                else player.OverChargeDatas[i] = DataTables.Get(23).GetData<CardData>(0);
+                Console.WriteLine(home.CharacterIds[i]);
+                geroin = avatar.GetHero(home.CharacterIds[0]);
             }
+
+            
+
+            player.Emotes.Add(1, geroin.emote[1]);
+            player.Emotes.Add(2, geroin.emote[2]);
+            player.Emotes.Add(3, geroin.emote[3]);
+            player.Emotes.Add(4, home.PlayerSelectedEmotes[4]);
+            player.Emotes.Add(5, home.PlayerSelectedEmotes[5]);
             player.HeroIndexMax = home.CharacterIds.Length - 1;
-            player.Gear1 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000000 + avatar.GetHero(home.CharacterIds[0]).SelectedGearId1);
-            player.Gear2 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000000 + avatar.GetHero(home.CharacterIds[0]).SelectedGearId2);
-            player.Accessory = player.AccessoryData == null ? null : new Accessory(player.AccessoryData);
+            player.Gear1 = null;
+            player.Gear2 = null;
+            player.Accessory = null;
             player.PlayerIndex = playerIndex;
             player.TeamIndex = teamIndex;
             Hero hero = avatar.GetHero(home.CharacterIds[0]);
@@ -437,14 +454,15 @@
             player.OverChargeDatas = new CardData[3];
             player.DisplayData.Name = name;
             player.DisplayData.ThumbnailId = GlobalId.CreateGlobalId(28, 0);
+            player.DisplayData.NameColorId = GlobalId.CreateGlobalId(43, 0);
             player.AccountId = 100000 + playerIndex;
             player.CharacterIds[0] = (character);
             player.AccessoryCardDatas[0] = DataTables.Get(23).GetData<CardData>(255);
             player.AccessoryDatas[0] = DataTables.Get(DataType.Accessory).GetData<AccessoryData>(player.AccessoryCardData.Name);
             //player.AccessoryUsesLeft = 3;
-            player.Accessory = player.AccessoryData == null ? null : new Accessory(player.AccessoryData);
-            player.Gear1 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000000);
-            player.Gear2 = DataTables.Get(DataType.Gear).GetDataByGlobalId<GearData>(62000001);
+            player.Accessory = null;
+            player.Gear1 = null;
+            player.Gear2 = null;
             player.PlayerIndex = playerIndex;
             player.TeamIndex = teamIndex;
             player.SessionId = -1;
@@ -464,15 +482,16 @@
             player.OverChargeDatas = new CardData[3];
             player.DisplayData.Name = name;
             player.DisplayData.ThumbnailId = GlobalId.CreateGlobalId(28, 0);
+            player.DisplayData.NameColorId = GlobalId.CreateGlobalId(43, 0);
             player.AccountId = 100000 + playerIndex;
             player.CharacterIds[0] = (GlobalId.CreateGlobalId(16, character));
             if (accessory != 0)
             {
-                player.AccessoryCardDatas[0] = DataTables.Get(23).GetData<CardData>(accessory);
+                player.AccessoryCardDatas[0] = null;
                 player.AccessoryDatas[0] = DataTables.Get(DataType.Accessory).GetData<AccessoryData>(player.AccessoryCardDatas[0].Name);
             }
             player.HeroIndexMax = 0;
-            player.Accessory = player.AccessoryData == null ? null : new Accessory(player.AccessoryData);
+            player.Accessory = null;
             player.Gear1 = null;
             player.Gear2 = null;
             player.PlayerIndex = playerIndex;

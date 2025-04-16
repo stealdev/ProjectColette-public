@@ -53,6 +53,11 @@
 
         public List<Tile> SpawnPointsBases;
 
+        public List<Tile> TrainingDummySmallSpawners;
+        public List<Tile> TrainingDummyMediumSpawners;
+        public List<Tile> TrainingDummyBigSpawners;
+        public List<Tile> TrainingDummyShooting;
+
 
         public TileMap(int width, int height, string data)
         {
@@ -65,6 +70,11 @@
 
             SpawnPointsBases = new List<Tile>();
 
+            TrainingDummySmallSpawners = new List<Tile>();
+            TrainingDummyMediumSpawners = new List<Tile>();
+            TrainingDummyBigSpawners = new List<Tile>();
+            TrainingDummyShooting = new List<Tile>();
+
             NewTiles = new List<Tile>();
 
             char[] chars = data.ToCharArray();
@@ -76,19 +86,34 @@
                 for (int j = 0; j < Width; j++)
                 {
                     Tiles[i, j] = new Tile(chars[idx], TileToLogic(j), TileToLogic(i));
+
                     if (chars[idx] == '1')
                     {
                         SpawnPoints.Add(Tiles[i, j]);
                         SpawnPointsTeam1.Add(Tiles[i, j]);
+
                     }
                     else if (chars[idx] == '2')
                     {
                         SpawnPoints.Add(Tiles[i, j]);
                         SpawnPointsTeam2.Add(Tiles[i, j]);
+                        TrainingDummySmallSpawners.Add(Tiles[i, j]);
                     }
                     else if (chars[idx] == '8')
                     {
                         SpawnPointsBases.Add(Tiles[i, j]);
+                    }
+                    else if (chars[idx] == '0')
+                    {
+                        TrainingDummyMediumSpawners.Add(Tiles[i, j]);
+                    }
+                    else if (chars[idx] == '3')
+                    {
+                        TrainingDummyBigSpawners.Add(Tiles[i, j]);
+                    }
+                    else if (chars[idx] == '4')
+                    {
+                        TrainingDummyShooting.Add(Tiles[i, j]);
                     }
 
                     idx++;
@@ -619,7 +644,6 @@
                                         v30 = v64;
                                     if (v30 < v82)
                                         v30 = v82;
-                                    Debugger.Print(v29.ToString());
                                     if (v30 <= v29)
                                         return false;
                                 }

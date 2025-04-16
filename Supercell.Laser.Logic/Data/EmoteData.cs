@@ -34,5 +34,10 @@ namespace Supercell.Laser.Logic.Data
         //public string EmoteBundle { get; set; }
 
         public bool IsDefaultBattleEmote { get; set; }
+
+        public int PriceGems { get; set; }
+        public int PriceBling { get; set; }
+
+
     }
 }

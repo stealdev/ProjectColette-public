@@ -31,6 +31,12 @@ namespace Supercell.Laser.Logic.Data
             Gamefiles.Add(DataType.Accessory, "Assets/csv_logic/accessories.csv");
             Gamefiles.Add(DataType.Emote, "Assets/csv_logic/emotes.csv");
             Gamefiles.Add(DataType.Gear, "Assets/csv_logic/gear_boosts.csv");
+            Gamefiles.Add(DataType.NameColor, "Assets/csv_logic/name_colors.csv");
+            Gamefiles.Add(DataType.Titul, "Assets/csv_logic/player_titles.csv");
+            Gamefiles.Add(DataType.MasteryVanity, "Assets/csv_logic/mastery_hero_confs.csv");
+            Gamefiles.Add(DataType.Mastery, "Assets/csv_logic/mastery_levels.csv");
+            Gamefiles.Add(DataType.Spray, "Assets/csv_logic/sprays.csv");
+
         }
 
         public static void Load()

@@ -42,10 +42,15 @@
         [JsonProperty] public List<Hero> Heroes;
 
         [JsonProperty] public int TrioWins;
+        [JsonProperty] public int DuoWins;
         [JsonProperty] public int SoloWins;
 
         [JsonProperty] public int Tokens;
         [JsonProperty] public int StarTokens;
+        [JsonProperty] public int StarPoints;
+        [JsonProperty] public int Blings;
+        [JsonProperty] public int PowerPoints;
+        [JsonProperty] public int RareTokens;
 
         [JsonProperty] public bool IsDev;
         [JsonProperty] public bool IsPremium;
@@ -66,6 +71,8 @@
         [JsonIgnore] public int TeamIndex;
         [JsonIgnore] public int OwnIndex;
 
+        [JsonProperty] public int HighestTrophies;
+
         [JsonProperty] public int RollsSinceGoodDrop;
 
         public int Trophies
@@ -81,17 +88,9 @@
             }
         }
 
-        public int HighestTrophies
+        public void AddTrophies(int t)
         {
-            get
-            {
-                int result = 0;
-                foreach (Hero hero in Heroes.ToArray())
-                {
-                    result += hero.HighestTrophies;
-                }
-                return result;
-            }
+            HighestTrophies = Math.Max(HighestTrophies, Trophies + t);
         }
 
         public int GetUnlockedBrawlersCountWithRarity(string rarity)
@@ -138,6 +137,12 @@
         {
             return Heroes.Find(x => x.CharacterId == characterId) != null;
         }
+
+        public void SetEmoteForBrawler(int characterId, int slot, int pin)
+        {
+            Hero heroEntry = GetHero(characterId);
+            heroEntry.emote[slot] = pin;
+        }
         public Hero GetHero(int characterId)
         {
             return Heroes.Find(x => x.CharacterId == characterId);
@@ -147,11 +152,20 @@
             //Debugger.Print(DataTables.Get(16).GetData<CharacterData>(cardData.Target).GetInstanceId() + "");
             return GetHero(DataTables.Get(16).GetData<CharacterData>(cardData.Target).GetInstanceId() + 16000000);
         }
+
         public bool UseDiamonds(int count)
         {
             if (count > Diamonds) return false;
 
             Diamonds -= count;
+            return true;
+        }
+
+        public bool UseBlings(int count)
+        {
+            if (count > Blings) return false;
+
+            Blings -= count;
             return true;
         }
 
@@ -197,6 +211,21 @@
         public void AddStarTokens(int count)
         {
             StarTokens += count;
+        }
+
+        public void AddPowerPoints(int count)
+        {
+            PowerPoints += count;
+        }
+
+        public void AddRareTokens(int count)
+        {
+            RareTokens += count;
+        }
+
+        public void AddBlings(int count)
+        {
+            Blings += count;
         }
 
         public ClientAvatar()
@@ -288,7 +317,7 @@
             stream.WriteInt(-1);
 
             stream.WriteVInt(17);
-            stream.WriteVInt(1 + Heroes.Count);//1
+            stream.WriteVInt(2 + Heroes.Count);//1
             {
                 //ByteStreamHelper.WriteDataReference(stream, 5000001);
                 //stream.WriteVInt(-1);
@@ -296,7 +325,11 @@
 
                 ByteStreamHelper.WriteDataReference(stream, 5000008);
                 stream.WriteVInt(-1);
-                stream.WriteVInt(86420);
+                stream.WriteVInt(Gold);
+
+                ByteStreamHelper.WriteDataReference(stream, 5000023);
+                stream.WriteVInt(-1);
+                stream.WriteVInt(Blings);
                 //stream.WriteVInt(Gold);
 
                 //ByteStreamHelper.WriteDataReference(stream, 5000009);
@@ -387,72 +420,16 @@
                 }
 
             }
-            stream.WriteVInt(Heroes.Count);//8
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, hero.CharacterData);
-                stream.WriteVInt(-1);
-                stream.WriteVInt(0);//“新”
-                //stream.WriteVInt(hero.PowerLevel);
-            }
-            stream.WriteVInt(Heroes.Count);//9
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000000 + hero.SelectedGearId1);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-
-            }
-            stream.WriteVInt(Heroes.Count);//10
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000000 + hero.SelectedGearId2);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
-            stream.WriteVInt(Heroes.Count);//11
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
-            stream.WriteVInt(Heroes.Count);//12
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
-            stream.WriteVInt(Heroes.Count);//13
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
-            stream.WriteVInt(Heroes.Count);//14
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
-            stream.WriteVInt(Heroes.Count);//15
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(1);
-                stream.WriteVInt(hero.CharacterId);
-            }
+            stream.WriteVInt(0);//8
+            stream.WriteVInt(0);//9
+            stream.WriteVInt(0);//10
+            stream.WriteVInt(0);//11
+            stream.WriteVInt(0);//12
+            stream.WriteVInt(0);//13
+            stream.WriteVInt(0);//14
+            stream.WriteVInt(0);//15
             stream.WriteVInt(0);//16(PowerPoints)
-            stream.WriteVInt(Heroes.Count);//17
-            foreach (Hero hero in Heroes)
-            {
-                ByteStreamHelper.WriteDataReference(stream, 62000004);
-                stream.WriteVInt(-1);
-                stream.WriteVInt(2);
-            }
+            stream.WriteVInt(0);//17
 
             stream.WriteVInt(Diamonds); // Diamonds
             stream.WriteVInt(0); // CumulativePurchasedDiamonds

@@ -48,7 +48,7 @@
             ActivationDelay = 0;
             StartUsingTick = 0;
             CoolDown = 0;
-            Uses = 7;
+            Uses = 3;
             Angle = 0;
             IsActive = false;
             TicksActive = 0;
@@ -82,7 +82,7 @@
             if (character.m_isBot == 2 || (character.GetPlayer()?.IsAdmin ?? false))
             {
                 if (character.GetPlayer()?.IsAdmin ?? false) CoolDown = 0;
-                Uses = 7;
+                Uses = 3;
                 State = 0;
             }
         }
@@ -243,6 +243,18 @@
             {
                 case "jump":
                     character.TriggerPushback(character.GetX() - LogicMath.GetRotatedX(1000, 0, GetActivationAngle(character)), character.GetY() - LogicMath.GetRotatedY(1000, 0, GetActivationAngle(character)), AccessoryData.CustomValue1, true, 0, true, true, false, true, true, false, false, 0);
+                    break;
+                case "vision":
+                    //if (character != null && character.CharacterData.IsHero() && character.GetBattle() != null)
+                    //{
+                    //foreach (GameObject player in character.GetBattle().GetGameObjectManager().GetGameObjects())
+                    //{
+                        //if (player == null) return;
+                        //if (!player.CharacterData.IsHero()) return;
+                        //player.EyeActive();
+
+                    //} эта шлюха не работает так что пока
+                    Console.WriteLine("Active");
                     break;
                 case "dash":
                     int Angle = GetActivationAngle(character);

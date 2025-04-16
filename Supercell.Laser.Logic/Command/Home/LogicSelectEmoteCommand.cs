@@ -1,5 +1,6 @@
 ﻿namespace Supercell.Laser.Logic.Command.Home
 {
+    using System.Runtime.InteropServices;
     using Supercell.Laser.Logic.Data;
     using Supercell.Laser.Logic.Helper;
     using Supercell.Laser.Logic.Home;
@@ -8,22 +9,39 @@
 
     public class LogicSelectEmoteCommand : Command
     {
-        int skinId;
+        private int EmoteID;
+        private int EmoteSlot;
         public override void Decode(ByteStream stream)
         {
             base.Decode(stream);
             stream.ReadVInt();
-            skinId = stream.ReadVInt();
-            int slot =stream.ReadVInt();
+            EmoteID = stream.ReadVInt();
+            EmoteSlot =stream.ReadVInt();
         }
 
         public override int Execute(HomeMode homeMode)
         {
-            //SkinData skinData = DataTables.Get(DataType.Skin).GetData<SkinData>(skinId);
-            //SkinConfData skinConfData= DataTables.Get(DataType.SkinConf).GetData<SkinConfData>(skinData.Conf);
-            //int characterid=DataTables.Get(16).GetData<CharacterData>(skinConfData.Character).GetInstanceId() + 16000000;
-            //Hero hero=homeMode.Avatar.GetHero(characterid);
-            //hero.SelectedSkinId = skinId;
+            if (EmoteSlot < 0 || EmoteSlot > 6) return -1;
+            switch (EmoteSlot)
+            {
+                case 4:
+                    homeMode.Home.PlayerSelectedEmotes[4] = EmoteID;
+                    break;
+                case 5:
+                    homeMode.Home.PlayerSelectedEmotes[5] = EmoteID;
+                    break;
+            }
+
+            EmoteData emoteData = DataTables.Get(DataType.Emote).GetDataWithId<EmoteData>(EmoteID);
+
+            CharacterData characterData = DataTables.Get(DataType.Character).GetData<CharacterData>(emoteData.Character);
+            if (characterData == null) return 0;
+            Hero hero = homeMode.Avatar.GetHero(characterData.GetGlobalId()) ?? null;
+            
+            if (emoteData.Character != null && characterData != null) homeMode.Avatar.SetEmoteForBrawler(characterData.GetGlobalId(), EmoteSlot, EmoteID);
+            if (hero.emote[1] == hero.emote[2] || hero.emote[1] == hero.emote[3]) homeMode.Avatar.GetHero(characterData.GetGlobalId()).emote[1] = 160 - 3;
+            if (hero.emote[2] == hero.emote[1] || hero.emote[1] == hero.emote[3]) homeMode.Avatar.GetHero(characterData.GetGlobalId()).emote[2] = 148 - 3;
+            if (hero.emote[3] == hero.emote[1] || hero.emote[3] == hero.emote[2]) homeMode.Avatar.GetHero(characterData.GetGlobalId()).emote[3] = 137 - 3;
             return 0;
         }
 

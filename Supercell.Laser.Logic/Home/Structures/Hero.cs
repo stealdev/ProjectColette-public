@@ -7,6 +7,9 @@
     using Supercell.Laser.Titan.Math;
     using Supercell.Laser.Logic.Home.Structures;
     using Supercell.Laser.Logic.Util;
+    using System.Runtime.CompilerServices;
+    using System.Reflection;
+    using System.Xml.Linq;
 
     [JsonObject(MemberSerialization.OptIn)]
     public class Hero
@@ -40,12 +43,22 @@
 
         [JsonProperty] public int SelectedOverChargeId;
 
+        [JsonProperty] public Dictionary<int, int> emote;
+
         public CharacterData CharacterData => DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(CharacterId);
         public CardData CardData => DataTables.Get(DataType.Card).GetDataByGlobalId<CardData>(CardId);
-
+        public EmoteData GetDefaultEmoteForCharacter(string Character, string Type)
+        {
+            foreach (EmoteData emoteData in DataTables.Get(DataType.Emote).GetDatas())
+            {
+                if (emoteData.Character == Character && emoteData.EmoteType == Type) return emoteData;
+            }
+            return null;
+        }
         public Hero(int characterId)
         {
             CharacterId = characterId;
+            CharacterData characterData = DataTables.Get(DataType.Character).GetDataByGlobalId<CharacterData>(characterId);
             CardData g = GetDefaultMetaForHero(5);
             if (g != null) SelectedGadgetId = g.GetInstanceId();
             CardData s = GetDefaultMetaForHero(4);
@@ -57,14 +70,18 @@
             SelectedGearId1 = 0;
             SelectedGearId2 = 1;
             SelectedSkinId = 0;
+            emote = new Dictionary<int, int>();
+            emote.Add(1, GetDefaultEmoteForCharacter(characterData.Name, "DEFAULT").GetInstanceId());
+            emote.Add(2, 137 - 3);
+            emote.Add(3, 148-3);
         }
 
         public void AddTrophies(int trophies)
         {
-            return;
             Trophies += trophies;
             HighestTrophies = LogicMath.Max(HighestTrophies, Trophies);
         }
+
         public void SetTrophies(int trophies)
         {
             Trophies = trophies;

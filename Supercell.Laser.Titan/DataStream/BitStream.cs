@@ -189,6 +189,8 @@
             this.WritePositiveInt(value, 7);
         }
 
+
+
         public void WritePositiveIntMax255(int value)
         {
             this.WritePositiveInt(value, 8);
@@ -262,6 +264,12 @@
         public void WritePositiveIntMax4194303(int value)
         {
             this.WritePositiveInt(value, 22);
+        }
+
+        public int WritePositiveIntMax134217727(int value)
+        {
+            WritePositiveInt(value, 27);
+            return value;
         }
 
         public bool WriteBoolean(bool value)

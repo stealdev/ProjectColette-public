@@ -13,7 +13,7 @@
         }
 
         public int Result;
-        public int TokensReward;
+        public int TokensReward = 10000;
         public int TrophiesReward;
         public List<BattlePlayer> Players;
         public List<Quest> ProgressiveQuests;
@@ -21,7 +21,7 @@
         public bool StarToken;
 
         public int GameMode;
-
+        public bool BattleWithoutTrophies;
         public bool IsPvP;
 
         public override void Encode()
@@ -61,8 +61,8 @@
             Stream.WriteBoolean(false);
             Stream.WriteBoolean(false); // no experience
             Stream.WriteBoolean(false); // no tokens left
-            Stream.WriteBoolean(IsPvP); // is PvP
-            Stream.WriteBoolean(false);
+            Stream.WriteBoolean(BattleWithoutTrophies); // is PvP
+            Stream.WriteBoolean(IsPvP);
             Stream.WriteBoolean(false);
             Stream.WriteBoolean(false);
             Stream.WriteBoolean(false);
@@ -109,10 +109,11 @@
                 Stream.WriteVInt(0);
                 Stream.WriteVInt(0);
 
-                Stream.WriteInt16(0);
-                Stream.WriteInt16(0);
-                Stream.WriteInt(0);
-                Stream.WriteInt(0);
+                Stream.WriteInt16((short)player.Kills); // kills
+                Stream.WriteInt16(0); // deaths
+                Stream.WriteInt(player.Damage); // uron
+                Stream.WriteInt(player.Heals); // heal
+                // if uron < heal) write heal
                 Stream.WriteDataReference(0);
             }
 
@@ -132,7 +133,7 @@
 
             ByteStreamHelper.WriteDataReference(Stream, OwnPlayer.Home.Thumbnail);
 
-            if(Stream.WriteBoolean(false));//play again
+            if(Stream.WriteBoolean(true));//play again
             {
                 Stream.WriteInt(0);
                 Stream.WriteVInt(0);
@@ -141,9 +142,47 @@
                 Stream.WriteInt(0);
 
             }
-            if (Stream.WriteBoolean(false)) //quests
+            if (Stream.WriteBoolean(true)) //quests
             {
-                Stream.WriteVInt(-1);
+                //if (Stream.WriteBoolean(ProgressiveQuests.Count > 0))
+                //{
+                //    Stream.WriteVInt(ProgressiveQuests.Count);
+                //    foreach (Quest quest in ProgressiveQuests)
+                //    {
+                //        quest.EncodeBattleEnd(Stream);
+                //    }
+                //}
+                Stream.WriteVInt(1);
+                Stream.WriteVInt(85);
+                Stream.WriteVInt(24); // brawl pass season
+                Stream.WriteVInt(1);// type
+                Stream.WriteVInt(1); // goal
+                Stream.WriteVInt(2); // выполнено из
+                Stream.WriteVInt(10); // reward
+                ByteStreamHelper.WriteDataReference(Stream, 16000000); // brawler
+                Stream.WriteVInt(6);
+                Stream.WriteVInt(0);
+                Stream.WriteVInt(-1); // reward type
+                Stream.WriteVInt(1);
+                Stream.WriteVInt(0);
+                Stream.WriteBoolean(true);
+                Stream.WriteBoolean(true);
+                Stream.WriteVInt(123); //  reward
+
+                Stream.WriteVInt(200);
+                ByteStreamHelper.WriteDataReference(Stream, 0);
+                Stream.WriteVInt(0);
+                Stream.WriteBoolean(false);
+                Stream.WriteVInt(0);
+                Stream.WriteVInt(0);
+                Stream.WriteVInt(0);
+                Stream.WriteVInt(123); // то что за батл крч получил
+                Stream.WriteBoolean(false);
+                Stream.WriteBoolean(true);
+                Stream.WriteBoolean(false);
+                Stream.WriteVInt(24);
+                Stream.WriteVInt(12312); // reward count
+                Stream.WriteVInt(1719737999);
 
                 Stream.WriteVInt(0);
                 Stream.WriteVInt(0);

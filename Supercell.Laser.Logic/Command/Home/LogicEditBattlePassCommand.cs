@@ -37,6 +37,9 @@
                 case 5:
                     homeMode.Home.DefaultBattleCard.Emote = VanityId;
                     break;
+                case 10:
+                    homeMode.Home.DefaultBattleCard.Title = VanityId;
+                    break;    
             }
             return 0;
         }

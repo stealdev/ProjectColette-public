@@ -179,6 +179,10 @@
                 {
                     case "Point":
                         return true;
+                    case "Money":
+                        return true;
+                    case "BattleRoyaleBuff":
+                        return true;
                     case "SoulCollectorSoul":
                         return a1.GetIndex() / 16 == GetIndex() / 16 && a1.GetHitpointPercentage() < 100;
                     case "WeaponThrowerWeapon":

@@ -28,18 +28,6 @@
                 homeMode.Home.CharacterIds[Index] = globalId;
                 homeMode.CharacterChanged.Invoke(globalId);
                 Hero hero = homeMode.Avatar.GetHero(globalId);
-                if (hero.SelectedGadgetId == 0)
-                {
-                    CardData g = homeMode.GetDefaultMetaForHero(hero, 5);
-                    if(g!=null)  hero.SelectedGadgetId = g.GetInstanceId();
-                    //Debugger.Print(g.GetInstanceId().ToString());
-                }
-                if (hero.SelectedStarPowerId == 0)
-                {
-                    CardData s = homeMode.GetDefaultMetaForHero(hero, 4);
-                    if(s!=null)  hero.SelectedStarPowerId = s.GetInstanceId();
-                    //Debugger.Print(s.GetInstanceId().ToString());
-                }
                 //homeMode.Home.CharacterId = GlobalId.CreateGlobalId(16, 38);
                 //homeMode.CharacterChanged.Invoke(GlobalId.CreateGlobalId(16, 38));
                 return 0;

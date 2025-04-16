@@ -2049,7 +2049,14 @@
                 do
                 {
                     v40 = v312 + 1;
+
                     Tile v41 = v15.GetTile(v27, v312 + 1, true);
+                    //Tile v411 = v15.GetTile(TargetX, TargetY, true);
+                    //if (v411 != null && v41.Data.TileCode == "B")
+                    //{
+                    //    v41.Destruct();
+                    //    return 0;
+                    //}
                     if (v41 == null || v41.IsDestructed())
                         goto LABEL_63;
                     if ((!v41.Data.BlocksProjectiles || ProjectileData.PassesEnvironment)

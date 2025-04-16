@@ -68,12 +68,12 @@
                 }
                 if (team.Type == 1)
                 {
-                    string[] supportedModes = { "GemGrab", "Bounty", "Heist" };
+                    string[] supportedModes = { "GemGrab", "Showdown", "Bounty", "Heist", "ShowdownSolo", "ShowdownDuo", "LoneStar" };
                     string gmv = DataTables.Get(DataType.Location).GetDataByGlobalId<LocationData>(team.LocationId).GameModeVariation;
                     if (!supportedModes.Contains(gmv))
                     {
                         LogicAddNotificationCommand logicAddNotificationCommand = new LogicAddNotificationCommand();
-                        logicAddNotificationCommand.Notification = new FloaterTextNotification("该游戏模式暂不可用");
+                        logicAddNotificationCommand.Notification = new FloaterTextNotification("Not avaible gamemode.");
                         AvailableServerCommandMessage availableServerCommandMessage = new AvailableServerCommandMessage();
                         availableServerCommandMessage.Command = logicAddNotificationCommand;
                         foreach (TeamMember member in team.Members)
@@ -87,6 +87,7 @@
                     if (team.BattlePlayerMap != null) battle.SetPlayerMap(team.BattlePlayerMap);
                     battle.SetEventModifiers(team.CustomModifiers);
                     List<MatchmakingEntry> entries = new List<MatchmakingEntry>();
+                    List<MatchmakingEntry> sortedEntries = new List<MatchmakingEntry>();
                     foreach (TeamMember member in team.Members)
                     {
                         Connection connection = Sessions.GetSession(member.AccountId).Connection;
@@ -95,69 +96,111 @@
                         entries.Add(entry);
                         member.IsReady = false;
                     }
-                    for (int i = 0; i < entries.Count; i++)
-                    {
-                        UDPSocket socket = UDPGateway.CreateSocket();
-                        socket.TCPConnection = entries[i].Connection;
-                        socket.Battle = battle;
-                        entries[i].Connection.UdpSessionId = socket.SessionId;
 
-                        int teamIndex = entries[i].PrefferedTeam;
-                        BattlePlayer player = BattlePlayer.Create(entries[i].Connection.Home, entries[i].Connection.Avatar, i, teamIndex);
-                        player.TeamId = entries[i].PlayerTeamId;
-                        entries[i].Player = player;
-                        battle.AddPlayer(player, entries[i].Connection.UdpSessionId);
-                    }
-                    List<int> team1BotsCharacters = new List<int>();
-                    List<int> team2BotsCharacters = new List<int>();
+                    if (GameModeUtil.HasTwoTeams(battle.GetGameModeVariation())) {
 
-                    for (int i = battle.GetTeamPlayersCount(0); i < battle.GetPlayersCountWithGameModeVariation() / 2; i++)
-                    {
-                        if (team.DisabledBots.Contains(i)) continue;
-                        bool isBotValid = false;
-
-                        int botCharacter = -1;
-                        while (!isBotValid)
+                        for (int i = 0; i < entries.Count; i++)
                         {
-                            botCharacter = 16000000 + MatchmakingSlot.botBrawlers.OrderBy(f => Guid.NewGuid()).First();
-                            isBotValid = !team1BotsCharacters.Contains(botCharacter);
-                            if (!isBotValid) isBotValid = !GameModeUtil.HasTwoTeams(battle.GetGameModeVariation());
+                            sortedEntries.Add(entries[i]);
                         }
-                        team1BotsCharacters.Add(botCharacter);
-                        CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
-                        BattlePlayer bot = BattlePlayer.CreateBotInfo((i - entries.Count + 1).ToString(), battle.GetPlayers().Count(), 0, botCharacter);
-                        battle.AddPlayer(bot, -1);
-                    }
-                    for (int i = battle.GetPlayersCountWithGameModeVariation() / 2 + battle.GetTeamPlayersCount(1); i < battle.GetPlayersCountWithGameModeVariation(); i++)
-                    {
-                        if (team.DisabledBots.Contains(i)) continue;
-                        bool isBotValid = false;
-
-                        int botCharacter = -1;
-                        while (!isBotValid)
+                        Console.WriteLine("lore");
+                        for (int i = 0; i < sortedEntries.Count; i++)
                         {
-                            botCharacter = 16000000 + MatchmakingSlot.botBrawlers.OrderBy(f => Guid.NewGuid()).First();
-                            isBotValid = !team2BotsCharacters.Contains(botCharacter);
-                            if (!isBotValid) isBotValid = !GameModeUtil.HasTwoTeams(battle.GetGameModeVariation());
+                            UDPSocket socket = UDPGateway.CreateSocket();
+                            socket.TCPConnection = sortedEntries[i].Connection;
+                            socket.Battle = battle;
+                            sortedEntries[i].Connection.UdpSessionId = socket.SessionId;
+
+                            int teamIndex = sortedEntries[i].PrefferedTeam;
+                            BattlePlayer player = BattlePlayer.Create(sortedEntries[i].Connection.Home, sortedEntries[i].Connection.Avatar, i, teamIndex);
+                            player.TeamId = sortedEntries[i].PlayerTeamId;
+                            sortedEntries[i].Player = player;
+                            battle.AddPlayer(player, sortedEntries[i].Connection.UdpSessionId);
                         }
-                        team2BotsCharacters.Add(botCharacter);
-                        CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
-                        BattlePlayer bot = BattlePlayer.CreateBotInfo((i - entries.Count + 1).ToString(), battle.GetPlayers().Count(), 1, botCharacter);
-                        battle.AddPlayer(bot, -1);
+                        List<int> team1BotsCharacters = new List<int>();
+                        List<int> team2BotsCharacters = new List<int>();
+                        for (int i = battle.GetTeamPlayersCount(0); i < battle.GetPlayersCountWithGameModeVariation() / 2; i++)
+                        {
+                            if (team.DisabledBots.Contains(i)) continue;
+                            
+                            bool isBotValid = false;
+
+                            int botCharacter = -1;
+                            while (!isBotValid)
+                            {
+                                botCharacter = 16000000 + MatchmakingSlot.botBrawlers.OrderBy(f => Guid.NewGuid()).First();
+                                isBotValid = !team1BotsCharacters.Contains(botCharacter);
+                                if (!isBotValid) isBotValid = !GameModeUtil.HasTwoTeams(battle.GetGameModeVariation());
+                            }
+
+                            team1BotsCharacters.Add(botCharacter);
+                            CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
+                            BattlePlayer bot = BattlePlayer.CreateBotInfo((i - entries.Count + 2).ToString(), battle.GetPlayers().Count(), 0, botCharacter);
+                            battle.AddPlayer(bot, -1);
+                        }
+                        for (int i = battle.GetPlayersCountWithGameModeVariation() / 2 + battle.GetTeamPlayersCount(1); i < battle.GetPlayersCountWithGameModeVariation(); i++)
+                        {
+                            if (team.DisabledBots.Contains(i)) continue;
+                            bool isBotValid = false;
+                            
+                            int botCharacter = -1;
+                            while (!isBotValid)
+                            {
+                                botCharacter = 16000000 + MatchmakingSlot.botBrawlers.OrderBy(f => Guid.NewGuid()).First();
+                                isBotValid = !team2BotsCharacters.Contains(botCharacter);
+                                if (!isBotValid) isBotValid = !GameModeUtil.HasTwoTeams(battle.GetGameModeVariation());
+                            }
+                            team2BotsCharacters.Add(botCharacter);
+                            CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
+                            BattlePlayer bot = BattlePlayer.CreateBotInfo((i - entries.Count + 2).ToString(), battle.GetPlayers().Count(), 1, botCharacter);
+                            battle.AddPlayer(bot, -1);
+                        }
                     }
-                    for (int i = 0; i < entries.Count; i++)
+                    else
+                    {
+                        sortedEntries = entries;
+                        for (int i = 0; i < entries.Count; i++)
+                        {
+                            UDPSocket socket = UDPGateway.CreateSocket();
+                            socket.TCPConnection = sortedEntries[i].Connection;
+                            socket.Battle = battle;
+                            sortedEntries[i].Connection.UdpSessionId = socket.SessionId;
+
+                            int teamIndex = i;
+                            Console.WriteLine(teamIndex);
+                            BattlePlayer player = BattlePlayer.Create(sortedEntries[i].Connection.Home, sortedEntries[i].Connection.Avatar, i, teamIndex);
+                            player.TeamId = sortedEntries[i].PlayerTeamId;
+                            sortedEntries[i].Player = player;
+                            battle.AddPlayer(player, sortedEntries[i].Connection.UdpSessionId);
+                        }
+                        for (int i = entries.Count; i < battle.GetPlayersCountWithGameModeVariation(); i++)
+                        {
+                            int botCharacter = 16000000 + MatchmakingSlot.botBrawlers.OrderBy(f => Guid.NewGuid()).First();
+
+                            int teamIndex = i;
+                            Console.WriteLine(teamIndex);
+
+                            CharacterData data = DataTables.Get(16).GetDataByGlobalId<CharacterData>(botCharacter);
+                            BattlePlayer bot = BattlePlayer.CreateBotInfo(data.ItemName.ToUpper(), i, teamIndex, botCharacter);
+                            battle.AddPlayer(bot, -1);
+                        }
+                    }
+
+                    for (int i = 0; i < sortedEntries.Count; i++)
                     {
                         StartLoadingMessage startLoading = new StartLoadingMessage();
                         startLoading.LocationId = battle.Location.GetGlobalId();
-                        startLoading.TeamIndex = entries[i].Player.TeamIndex;
-                        startLoading.OwnIndex = entries[i].Player.PlayerIndex;
+                        startLoading.TeamIndex = sortedEntries[i].Player.TeamIndex;
+                        startLoading.OwnIndex = sortedEntries[i].Player.PlayerIndex;
                         startLoading.GameMode = battle.GetGameModeVariation();
                         startLoading.SetPlayerMap(battle.BattlePlayerMap);
                         startLoading.Modifiers = battle.EventModifiers;
-                        entries[i].Connection.Avatar.UdpSessionId = entries[i].Connection.UdpSessionId;
+                        if (sortedEntries.Count <= 1) { startLoading.LeaveButton = true; }
+                        sortedEntries[i].Connection.Avatar.UdpSessionId = sortedEntries[i].Connection.UdpSessionId;
                         startLoading.Players.AddRange(battle.GetPlayers());
-                        entries[i].Connection.Send(startLoading);
+                        sortedEntries[i].Connection.Send(startLoading);
                         battle.Dummy = startLoading;
+                        battle.BattleWithTrophies = false;
                     }
                     battle.AddGameObjects();
                     battle.Start();

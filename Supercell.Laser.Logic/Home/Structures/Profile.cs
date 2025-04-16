@@ -69,6 +69,7 @@
             
             PlayerDisplayData playerDisplayData = new PlayerDisplayData();
             playerDisplayData.ThumbnailId = home.ThumbnailId;
+            playerDisplayData.NameColorId = home.NameColorId;
             playerDisplayData.Name = avatar.Name;
             profile.DisplayData = playerDisplayData;
 

@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <Configurations>Debug;Release;SHIT</Configurations>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\AccessoryData - Копировать.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Assets\MapPrint.json" />

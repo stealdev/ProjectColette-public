@@ -52,6 +52,8 @@ namespace Supercell.Laser.Logic.Battle
         private int m_gameModeVariation;
         private int m_playersCountWithGameModeVariation;
 
+        public bool BattleWithTrophies;
+
         private Queue<ClientInput> m_inputQueue;
 
         List<GameObject> printobjects = new List<GameObject>();
@@ -147,6 +149,7 @@ namespace Supercell.Laser.Logic.Battle
             foreach (BattlePlayer player in m_players)
             {
                 if (player.IsAlive) continue;
+                if (m_gameModeVariation == 6) return;
                 LogicVector2 spawnPoint = player.GetSpawnPoint();
 
                 if (GetTicksGone() == player.DeathTick + 20 * GameModeUtil.GetRespawnSeconds(m_gameModeVariation))
@@ -165,8 +168,8 @@ namespace Supercell.Laser.Logic.Battle
                     Character character = SpawnHero(player.CharacterData, player.HeroPowerLevel, player.TeamIndex * 16 + player.PlayerIndex, 0, false);
                     character.SetPosition(spawnPoint.X, spawnPoint.Y, 0);
                     character.SetBot(player.IsBot());
-                    if (player.Gear1 != null) character.Gear1 = new Gear(player.Gear1);
-                    if (player.Gear2 != null) character.Gear2 = new Gear(player.Gear2);
+                    if (player.Gear1 != null) character.Gear1 = null;
+                    if (player.Gear2 != null) character.Gear2 = null;
                     character.SpawnTick = GetTicksGone();
                     character.IsInvincible = true;
                     player.OwnObjectId = character.GetGlobalID();
@@ -200,14 +203,13 @@ namespace Supercell.Laser.Logic.Battle
         {
             if (m_gameModeVariation == 6)
             {
-                return;
                 int rank = m_playersAlive;
                 m_playersAlive--;
                 player.BattleRoyaleRank = rank;
 
                 BattleEndMessage message = new BattleEndMessage();
                 message.GameMode = 2;
-                message.IsPvP = true;
+                message.IsPvP = BattleWithTrophies;
                 message.Players = new List<BattlePlayer>();
                 message.Players.Add(player);
                 message.OwnPlayer = player;
@@ -349,9 +351,7 @@ namespace Supercell.Laser.Logic.Battle
                     player.Avatar.BattleId = Id;
                     player.Avatar.TeamIndex = player.TeamIndex;
                     player.Avatar.OwnIndex = player.PlayerIndex;
-                    if (GamePlayUtil.IsAdmin(player.AccountId)) player.IsAdmin = true;
                 }
-                if (HasEventModifier(13) || player.IsAdmin) player.AddUltiCharge(4000);
             }
         }
 
@@ -366,14 +366,14 @@ namespace Supercell.Laser.Logic.Battle
                     player.Avatar.BattleId = -1;
                 }
             }
-            if (!m_playersBySessionId.Any())
+            /*if (!m_playersBySessionId.Any())
             {
                 this.m_updateTimer.Dispose();
                 this.GameOver();
                 this.IsGameOver = true;
                 Debugger.Print("Battle #" + Id + " has ended!");
                 return;
-            }
+            }*/
         }
 
         public void AddGameObjects()
@@ -402,9 +402,9 @@ namespace Supercell.Laser.Logic.Battle
                     character.SetIndex(player.PlayerIndex + (16 * player.TeamIndex));
                     character.SetHeroLevel(player.HeroPowerLevel);
                     //character.SetImmunity(60, 100);
-                    character.Gear1 = new Gear(player.Gear1);
-                    character.Gear2 = new Gear(player.Gear2);
-                    character.SetPosition(2950, 4950, 0);
+                    character.Gear1 = null;
+                    character.Gear2 = null;
+                    character.SetPosition(3150, 4950, 0);
 
                     m_gameObjectManager.AddGameObject(character);
                     player.OwnObjectId = character.GetGlobalID();
@@ -431,8 +431,8 @@ namespace Supercell.Laser.Logic.Battle
                 character.SetBot(player.IsBot());
                 //if (player.IsBot() && GetGameModeVariation() == 24) character.m_isBot = 2;
                 //character.SetImmunity(60, 100);
-                if (player.Gear1 != null) character.Gear1 = new Gear(player.Gear1);
-                if (player.Gear2 != null) character.Gear2 = new Gear(player.Gear2);
+                if (player.Gear1 != null) character.Gear1 = null;
+                if (player.Gear2 != null) character.Gear2 = null;
 
 
                 if (GameModeUtil.HasTwoTeams(m_gameModeVariation))
@@ -489,42 +489,42 @@ namespace Supercell.Laser.Logic.Battle
             if (m_gameModeVariation == 0)
             {
                 Item item = new Item(DataTables.GetItemByName("OrbSpawner"));
-                item.SetPosition(2950, 4950, 0);
+                item.SetPosition(3150, 4950, 0);
                 item.DisableAppearAnimation();
                 m_gameObjectManager.AddGameObject(item);
             }
 
-            //if (m_gameModeVariation == 3)
-            //{
-            //    ItemData data = DataTables.Get(18).GetData<ItemData>("Money");
-            //    Item item = new Item(18, data.GetInstanceId());
-            //    item.SetPosition(2950, 4950, 0);
-            //    item.DisableAppearAnimation();
-            //    m_gameObjectManager.AddGameObject(item);
-            //} 
+            if (m_gameModeVariation == 3)
+            {
+                ItemData data = DataTables.Get(18).GetData<ItemData>("Money");
+                Item item = new Item(data);
+                item.SetPosition(3150, 4950, 0);
+                item.DisableAppearAnimation();
+                m_gameObjectManager.AddGameObject(item);
+            } 
 
             if (m_gameModeVariation == 6)
             {
-                //CharacterData data = DataTables.Get(16).GetData<CharacterData>("LootBox");
-                //for (int i = 0; i < m_tileMap.Height; i++)
-                //{
-                //    for (int j = 0; j < m_tileMap.Width; j++)
-                //    {
-                //        Tile tile = m_tileMap.GetTile(i, j, true);
-                //        if (tile.Code == '4')
-                //        {
-                //            bool shouldSpawnBox = GetRandomInt(0, 120) < 60;
+                CharacterData data = DataTables.Get(16).GetData<CharacterData>("LootBox");
+                for (int i = 0; i < m_tileMap.Height; i++)
+                {
+                    for (int j = 0; j < m_tileMap.Width; j++)
+                    {
+                        Tile tile = m_tileMap.GetTile(i, j, true);
+                        if (tile.Code == '4')
+                        {
+                            bool shouldSpawnBox = GetRandomInt(0, 120) < 60;
 
-                //            if (shouldSpawnBox)
-                //            {
-                //                Character box = new Character(16, data.GetInstanceId());
-                //                box.SetPosition(tile.X, tile.Y, 0);
-                //                box.SetIndex(10 * 16);
-                //                m_gameObjectManager.AddGameObject(box);
-                //            }
-                //        }
-                //    }
-                //}
+                            if (shouldSpawnBox)
+                            {
+                                Character box = new Character(data);
+                                box.SetPosition(tile.X + 150, tile.Y + 150, 0);
+                                box.SetIndex(165);
+                                m_gameObjectManager.AddGameObject(box);
+                            }
+                        }
+                    }
+                }
             }
             if (m_gameModeVariation == 7)
             {
@@ -565,25 +565,59 @@ namespace Supercell.Laser.Logic.Battle
             if (m_gameModeVariation == 13)
             {
 
-                CharacterData characterData = DataTables.Get(16).GetData<CharacterData>("TrainingDummyBig");
-                Character boss = new Character(characterData);
-                boss.SetPosition(2000, 8000, 0);
-                boss.SetIndex(-16);
-                m_gameObjectManager.AddGameObject(boss);
-                //CharacterData characterData1 = DataTables.Get(16).GetData<CharacterData>("ClusterBombDude");
-                //Character boss1 = new Character(characterData1);
-                //boss1.SetPosition(4000, 8000, 0);
-                //boss1.SetIndex(-16);
-                //m_gameObjectManager.AddGameObject(boss1);
-                //for (int i = 0; i < 10; i++)
-                //{
-                //    CharacterData characterData2 = DataTables.Get(16).GetData<CharacterData>(i);
-                //    Character boss2 = new Character(characterData2);
-                //    boss2.SetPosition(3000 + (i - 5) * 300, 5000, 0);
-                //    boss2.SetIndex(-16);
-                //    m_gameObjectManager.AddGameObject(boss2);
+                Character TrainingDummyBig = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyBig"));
 
-                //}
+                Character TrainingDummyMedium = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyMedium"));
+                Character TrainingDummyMedium1 = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyMedium"));
+                Character TrainingDummyMedium2 = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyMedium"));
+                Character TrainingDummyMedium3 = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyMedium"));
+
+                Character TrainingDummySmall = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummySmall"));
+                Character TrainingDummyShooting = new Character(DataTables.Get(16).GetData<CharacterData>("TrainingDummyShooting"));
+
+
+                TrainingDummyBig.SetPosition(m_tileMap.TrainingDummyBigSpawners[0].X + 150, m_tileMap.TrainingDummyBigSpawners[0].Y + 150, 0);
+                TrainingDummyBig.SetIndex(-16);
+                m_gameObjectManager.AddGameObject(TrainingDummyBig);
+
+
+
+
+                for (int i = 0; i < m_tileMap.TrainingDummySmallSpawners.Count; i++)
+                {
+                    Tile tile = m_tileMap.TrainingDummySmallSpawners[i++ % m_tileMap.TrainingDummySmallSpawners.Count];
+                    Tile spawner = m_tileMap.TrainingDummySmallSpawners[i];
+                    Console.WriteLine(i);
+                    TrainingDummySmall.SetPosition(tile.X + 150, tile.Y + 150, 0);
+                    TrainingDummySmall.SetIndex(-16);
+                    // m_gameObjectManager.AddGameObject(TrainingDummySmall);
+                }
+
+                for (int i = 0; i < m_tileMap.TrainingDummyShooting.Count; i++)
+                {
+                    Tile spawner = m_tileMap.TrainingDummyShooting[i];
+                    TrainingDummyShooting.SetPosition(spawner.X + 150, spawner.Y + 150, 0);
+                    TrainingDummyShooting.SetIndex(-16);
+                    m_gameObjectManager.AddGameObject(TrainingDummyShooting);
+                }
+
+
+                TrainingDummyMedium.SetPosition(m_tileMap.TrainingDummyMediumSpawners[0].X + 150, m_tileMap.TrainingDummyMediumSpawners[0].Y + 150, 0);
+                TrainingDummyMedium.SetIndex(-16);
+                m_gameObjectManager.AddGameObject(TrainingDummyMedium);
+
+
+                TrainingDummyMedium1.SetPosition(m_tileMap.TrainingDummyMediumSpawners[1].X + 150, m_tileMap.TrainingDummyMediumSpawners[1].Y + 150, 0);
+                TrainingDummyMedium1.SetIndex(-16);
+                m_gameObjectManager.AddGameObject(TrainingDummyMedium1);
+
+                TrainingDummyMedium2.SetPosition(m_tileMap.TrainingDummyMediumSpawners[2].X + 150, m_tileMap.TrainingDummyMediumSpawners[2].Y + 150, 0);
+                TrainingDummyMedium2.SetIndex(-16);
+                m_gameObjectManager.AddGameObject(TrainingDummyMedium2);
+
+                TrainingDummyMedium3.SetPosition(m_tileMap.TrainingDummyMediumSpawners[3].X + 150, m_tileMap.TrainingDummyMediumSpawners[3].Y + 150, 0);
+                TrainingDummyMedium3.SetIndex(-16);
+                m_gameObjectManager.AddGameObject(TrainingDummyMedium3);
             }
             if (m_gameModeVariation == 30)
             {
@@ -621,17 +655,7 @@ namespace Supercell.Laser.Logic.Battle
             if (!m_playersBySessionId.ContainsKey(sessionId)) return;
 
             input.OwnerSessionId = sessionId;
-            try
-            {
-                m_inputQueue.Enqueue(input);
-            }
-            catch (Exception)
-            {
-                this.m_updateTimer.Dispose();
-                this.GameOver();
-                this.IsGameOver = true;
-                return;
-            }
+            m_inputQueue.Enqueue(input);
         }
 
         public void HandleSpectatorInput(ClientInput input, long sessionId)
@@ -704,6 +728,12 @@ namespace Supercell.Laser.Logic.Battle
                             character.ActivateSkill(0, input.X + character.GetX(), input.Y + character.GetY());
                         }
                         else character.ActivateSkill(0, input.X, input.Y);
+
+                        var counter = character1.GetFadeCounter();
+                        character1.IncrementFadeCounter();
+                        character.SetFadeCounter(counter);
+
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 1:
@@ -774,6 +804,11 @@ namespace Supercell.Laser.Logic.Battle
                             character.ActivateSkill(1, input.X + character.GetX(), input.Y + character.GetY());
                         }
                         else character.ActivateSkill(1, input.X, input.Y);
+                        var counter = character1.GetFadeCounter();
+                        character1.IncrementFadeCounter();
+                        character.SetFadeCounter(counter);
+
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 2:
@@ -807,13 +842,14 @@ namespace Supercell.Laser.Logic.Battle
 
                         //}
 
-
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 4:
                     {
                         SendBattleEndToPlayer(player);
                         RemovePlayer(player);
+                        character1.ResetAFKTicks();
                         return;
                     }
                 case 5:
@@ -821,6 +857,7 @@ namespace Supercell.Laser.Logic.Battle
                         if (character1.IsControlled) return;
                         Character character = (Character)m_gameObjectManager.GetGameObjectByID(player.OwnObjectId);
                         character?.UltiEnabled();
+                        character1.ResetAFKTicks();
                         //if (character?.Ultiing ?? false) character.UltiButtonPressedTimes = 1;
                         break;
                     }
@@ -829,6 +866,7 @@ namespace Supercell.Laser.Logic.Battle
                         if (character1.IsControlled) return;
                         Character character = (Character)m_gameObjectManager.GetGameObjectByID(player.OwnObjectId);
                         character?.UltiDisabled();
+                        character1.ResetAFKTicks();
                         //if (character != null) character.m_skills[1].SeemToBeActive = false;
                         //if (character?.UltiButtonPressedTimes == 1) character.UltiButtonPressedTwice();
                         break;
@@ -850,12 +888,14 @@ namespace Supercell.Laser.Logic.Battle
                         //player.AccessoryCoolDown = player.AccessoryData.Cooldown;
                         //player.AccessoryUsesLeft--;
                         //}
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 9:
                     {
                         if (character1.IsControlled) return;
                         player.UsePin(input.EmoteIndex, GetTicksGone());
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 10:
@@ -876,6 +916,7 @@ namespace Supercell.Laser.Logic.Battle
                             v26 = LogicMath.GetAngle(input.X - projectile.GetX(), input.Y - projectile.GetY());
                         }
                         projectile.SteerAngle = v26;
+                        character1.ResetAFKTicks();
                         break;
                     }
                 case 13:
@@ -901,29 +942,19 @@ namespace Supercell.Laser.Logic.Battle
                     //character1.ActivateSkill(1, 0, 0);
                     //character1.m_skills[1].OnActivate = true;
                     //character1.m_skills[1].TicksActive = 100;
+                    character1.ResetAFKTicks();
                     break;
                 case 14:
                     character1.SkillHoldTicks = -1;
                     character1.m_skills[1].SeemToBeActive = false;
+                    character1.ResetAFKTicks();
                     break;
                 case 15:
-                    //Item Spray = new Item(DataTables.GetItemByName("Spray"));
-                    //Spray.SetPosition(character1.GetX(), character1.GetY(), character1.GetZ());
-                    //Spray.SetIndex(character1.GetIndex());
-                    //m_gameObjectManager.AddGameObject(Spray);
-                    if (input.EmoteIndex == 4 && GamePlayUtil.IsAdmin(player.AccountId))
-                    {
-                        bool a = player.IsAdmin;
-                        foreach (BattlePlayer battlePlayer in GetPlayers()) battlePlayer.IsAdmin = !a;
-
-                    }
-                    if (input.EmoteIndex < 0 || input.EmoteIndex > player.HeroIndexMax) break;
-                    player.SetHeroIndex(input.EmoteIndex);
-                    character1.ReloadPlayer(player.CharacterData);
                     break;
                 case 17:
                     if (!player.HasOverCharge()) return;
                     player.OverCharging = true;
+                    character1.ResetAFKTicks();
                     break;
                 default:
                     Debugger.Warning("Input is unhandled: " + input.Type);
@@ -990,18 +1021,18 @@ namespace Supercell.Laser.Logic.Battle
                 {
                     if (player.GameListener != null)
                     {
-                        ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
+                        //ServerErrorMessage serverErrorMessage = new ServerErrorMessage();
                         try
                         {
-                            player.GameListener.SendMessage(serverErrorMessage);
+                            //player.GameListener.SendMessage(serverErrorMessage);
                         }
                         catch (Exception)
                         {
-                            ;
+                            Console.WriteLine("Battle stopped with exception! Message: " + e.Message + " Trace: " + e.StackTrace);
                         }
                     }
                 });
-                Console.WriteLine("Battle stopped with exception! Message: " + e.Message + " Trace: " + e.StackTrace);
+                
                 m_updateTimer.Dispose();
                 IsGameOver = true;
 
@@ -1052,47 +1083,127 @@ namespace Supercell.Laser.Logic.Battle
                 if (m_gameModeVariation != 6)
                 {
                     message.GameMode = 1;
-                    message.IsPvP = true;
+                    message.IsPvP = BattleWithTrophies;
                     message.Players = m_players;
                     message.OwnPlayer = player;
 
-                    if (m_winnerTeam == -1) // Draw
+                    if (m_winnerTeam == -1 && BattleWithTrophies) // Draw
                     {
                         message.Result = 2;
-                        message.TokensReward = 10;
+                        message.TokensReward = 15;
 
                         message.TrophiesReward = 0;
 
-                        player.Avatar.AddTokens(10);
+                        player.Avatar.AddTokens(15);
 
-                        player.Home.TokenReward += 10;
+                        player.Home.TokenReward += 15;
                     }
 
-                    if (isVictory)
+                    int brawlerTrophies = hero.Trophies;
+                    int winTrophies = 0;
+                    int loseTrophies = 0;
+                    if (!BattleWithTrophies) {
+                        message.BattleWithoutTrophies = true;
+                    }
+                    if (0 <= brawlerTrophies && brawlerTrophies <= 49)
+                    {
+                        winTrophies = 8;
+                        loseTrophies = 0;
+                    }
+                    else 
+                    {
+                        if (50 <= brawlerTrophies && brawlerTrophies <= 99) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -1;
+                        }
+                        if (100 <= brawlerTrophies && brawlerTrophies <= 199) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -2;
+                        }
+                        if (200 <= brawlerTrophies && brawlerTrophies <= 299) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -3;
+                        }
+                        if (300 <= brawlerTrophies && brawlerTrophies <= 399) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -4;
+                        }
+                        if (400 <= brawlerTrophies && brawlerTrophies <= 499) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -5;
+                        }
+                        if (500 <= brawlerTrophies && brawlerTrophies <= 599) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -6;
+                        }
+                        if (600 <= brawlerTrophies && brawlerTrophies <= 699) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -7;
+                        }
+                        if (700 <= brawlerTrophies && brawlerTrophies <= 799) 
+                        {
+                            winTrophies = 8;
+                            loseTrophies = -8;
+                        }
+                        if (800 <= brawlerTrophies && brawlerTrophies <= 899) 
+                        {
+                            winTrophies = 7;
+                            loseTrophies = -9;
+                        }
+                        if (900 <= brawlerTrophies && brawlerTrophies <= 999) 
+                        {
+                            winTrophies = 6;
+                            loseTrophies = -10;
+                        }
+                        if (1000 <= brawlerTrophies && brawlerTrophies <= 1099) 
+                        {
+                            winTrophies = 5;
+                            loseTrophies = -11;
+                        }
+                        if (1100 <= brawlerTrophies && brawlerTrophies <= 1199) 
+                        {
+                            winTrophies = 4;
+                            loseTrophies = -12;
+                        }
+                        if (brawlerTrophies >= 1200) 
+                        {
+                            winTrophies = 3;
+                            loseTrophies = -12;
+                        }
+                    }
+
+                    if (isVictory && BattleWithTrophies)
                     {
                         message.Result = 0;
                         message.TokensReward = 20;
 
-                        int trophiesReward = 8;
+                        int trophiesReward = winTrophies;
                         message.TrophiesReward = trophiesReward;
 
-                        if (m_playersBySessionId.Count > 1) hero.AddTrophies(trophiesReward);
+                        hero.AddTrophies(trophiesReward);
                         player.Avatar.AddTokens(20);
                         player.Avatar.TrioWins++;
 
                         player.Home.TokenReward += 20;
                         player.Home.TrophiesReward = LogicMath.Max(player.Home.TrophiesReward + trophiesReward, 0);
                     }
-                    else if (m_winnerTeam != -1)
+                    else if (m_winnerTeam != -1 && BattleWithTrophies)
                     {
                         message.Result = 1;
                         message.TokensReward = 10;
 
-                        int trophiesReward = -6;
+                        int trophiesReward = loseTrophies;
                         if (hero.Trophies < -trophiesReward) trophiesReward = -hero.Trophies;
                         message.TrophiesReward = trophiesReward;
 
-                        if (m_playersBySessionId.Count > 1) hero.AddTrophies(trophiesReward);
+                        hero.AddTrophies(trophiesReward);
                         player.Avatar.AddTokens(10);
 
                         player.Home.TokenReward += 10;
@@ -1101,15 +1212,19 @@ namespace Supercell.Laser.Logic.Battle
                 }
                 else
                 {
-                    message.IsPvP = true;
+                    message.IsPvP = BattleWithTrophies;
                     message.GameMode = 2;
                     message.Result = player.BattleRoyaleRank;
                     message.Players = new List<BattlePlayer>();
                     message.Players.Add(player);
                     message.OwnPlayer = player;
+                    if (!BattleWithTrophies) {
+                        message.BattleWithoutTrophies = true;
+                    }
+
                     int tokensReward = 40 / rank;
                     message.TokensReward = tokensReward;
-                    if (rank > 5)
+                    if (rank > 5 && BattleWithTrophies)
                     {
                         int trophiesReward = -(rank - 5);
                         if (hero.Trophies < -trophiesReward) trophiesReward = -hero.Trophies;
@@ -1119,7 +1234,7 @@ namespace Supercell.Laser.Logic.Battle
                         player.Home.TokenReward += tokensReward;
                         if (m_playersBySessionId.Count > 1) hero.AddTrophies(message.TrophiesReward);
                     }
-                    else
+                    else if (BattleWithTrophies)
                     {
                         int trophiesReward = (5 - rank) * 2;
                         message.TrophiesReward = trophiesReward;
@@ -1175,7 +1290,7 @@ namespace Supercell.Laser.Logic.Battle
             if (m_gameModeVariation != 6)
             {
                 message.GameMode = 1;
-                message.IsPvP = true;
+                message.IsPvP = BattleWithTrophies;
                 message.Players = m_players;
                 message.OwnPlayer = player;
 
@@ -1207,7 +1322,7 @@ namespace Supercell.Laser.Logic.Battle
             }
             else
             {
-                message.IsPvP = true;
+                message.IsPvP = BattleWithTrophies;
                 message.GameMode = 2;
                 message.Result = player.BattleRoyaleRank;
                 message.Players = new List<BattlePlayer>();
@@ -1286,9 +1401,10 @@ namespace Supercell.Laser.Logic.Battle
             {
                 if (m_playersAlive <= 1)
                 {
-                    //return true;
+                    return true;
                 }
             }
+
             else if (GameModeUtil.HasTwoBases(m_gameModeVariation))
             {
                 bool Base1Alive = false;

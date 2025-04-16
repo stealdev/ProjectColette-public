@@ -76,6 +76,12 @@
         GuaranteedBoxWithLevel = 31,
         GearToken = 32,
         GearScrap = 33,
-        Spray = 35
+        Spray = 35,
+        PowerPoint = 41,
+        Bling = 45,
+        OverchargeStarrDrop = 47,
+        BrawlerUpgradeFromLVLToLVL = 48,
+        RarityStarrDrop = 49,
+        RandomStarrDrop = 50,
     }
 }

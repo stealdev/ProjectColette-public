@@ -10,7 +10,7 @@
     {
         public int Count;
         public int DataGlobalId;
-        public int PinGlobalId;
+        public int SkinGlobalId;
         public int Type;
 
         public GatchaDrop(int type)
@@ -45,6 +45,23 @@
                 case 8: // Add Gems (Bonus)
                     avatar.AddDiamonds(Count);
                     break;
+                case 9: // 
+                    homeMode.Home.UnlockedSkins.Add(SkinGlobalId);
+                    break;
+                case 11:
+                    if (DataGlobalId > 28000000 && DataGlobalId < 29000000) { homeMode.Home.UnlockedThumbnails.Add(DataGlobalId); }
+                    if (DataGlobalId > 52000000 && DataGlobalId < 53000000) { homeMode.Home.UnlockedEmotes.Add(DataGlobalId); }
+                    if (DataGlobalId > 76000000 && DataGlobalId < 77000000) { homeMode.Home.UnlockedTituls.Add(DataGlobalId); }
+                    break;
+                case 22:
+                    avatar.AddRareTokens(Count);
+                    break;
+                case 24:
+                    avatar.AddPowerPoints(Count);
+                    break;
+                case 25:
+                    avatar.AddBlings(Count);
+                    break;
                 case 10:
                     homeMode.Home.UnlockedEmotes.Add(DataGlobalId);
                     break;
@@ -57,10 +74,16 @@
             ByteStreamHelper.WriteDataReference(stream, DataGlobalId);
             stream.WriteVInt(Type);
 
-            ByteStreamHelper.WriteDataReference(stream, 0);
-            ByteStreamHelper.WriteDataReference(stream, PinGlobalId);
-            ByteStreamHelper.WriteDataReference(stream, 0);
+
+            ByteStreamHelper.WriteDataReference(stream, SkinGlobalId);
+            ByteStreamHelper.WriteDataReference(stream, DataGlobalId);
+
+
+            ByteStreamHelper.WriteDataReference(stream, DataGlobalId);
+
             stream.WriteVInt(0);
+            stream.WriteVInt(0);
+            stream.WriteVInt(1);
         }
     }
 }

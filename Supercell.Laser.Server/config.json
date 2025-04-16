@@ -1,9 +1,9 @@
 ﻿{
-    "udp_host": "",
-    "udp_port": 0
-    "database_username": "",
+    "udp_host": "192.168.0.191",
+    "udp_port": 1337,
+    "database_username": "root",
     "database_password": "",
-    "database_name": "",
+    "database_name": "alahbrawl",
     "ContentUrl": "",
     "update_sha": "",
     "Fingerprint": ""
